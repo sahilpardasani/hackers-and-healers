@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Patient Agency — Postpartum GLP-1 Journey (Prototype)</title>
+<style>
+:root{
+  --bg:#f4f1ee; --card:#fff; --ink:#1f2a37; --muted:#6b7280; --line:#e7e2dc;
+  --brand:#7c5cff; --brand-soft:#efeaff; --green:#16a34a; --green-soft:#e8f7ee;
+  --amber:#b45309; --amber-soft:#fff4e0; --red:#b91c1c; --red-soft:#fdecec; --blue:#2563eb; --blue-soft:#e8f0ff;
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--ink)}
+.wrap{display:flex;gap:28px;justify-content:center;align-items:flex-start;padding:28px 16px;flex-wrap:wrap}
+.phone{width:390px;height:800px;background:#fafafa;border-radius:44px;border:10px solid #111;box-shadow:0 20px 50px rgba(0,0,0,.18);position:relative;overflow:hidden;display:flex;flex-direction:column}
+.status{height:34px;display:flex;justify-content:space-between;align-items:center;padding:0 24px;font-size:13px;font-weight:600}
+.screen{flex:1;overflow-y:auto;padding:4px 16px 90px}
+.nav{position:absolute;bottom:0;left:0;right:0;height:74px;background:#fff;border-top:1px solid var(--line);display:flex;justify-content:space-around;padding-top:8px}
+.nav button{background:none;border:none;font-size:11px;color:var(--muted);display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;width:72px}
+.nav button .ic{font-size:20px;line-height:1}
+.nav button.on{color:var(--brand);font-weight:600}
+h1{font-size:22px;margin:6px 0 2px}
+h2{font-size:15px;margin:18px 0 8px}
+.sub{color:var(--muted);font-size:13px;margin:0 0 10px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px;margin-bottom:10px}
+.row{display:flex;align-items:center;gap:10px}
+.between{justify-content:space-between}
+.chip{display:inline-block;font-size:10.5px;padding:2px 7px;border-radius:999px;background:#f1f5f9;color:#475569;margin-top:6px;margin-right:4px}
+.pill{font-size:11px;padding:3px 8px;border-radius:999px;font-weight:600}
+.ok{background:var(--green-soft);color:var(--green)} .warn{background:var(--amber-soft);color:var(--amber)} .bad{background:var(--red-soft);color:var(--red)} .info{background:var(--blue-soft);color:var(--blue)} .brandp{background:var(--brand-soft);color:var(--brand)}
+.alert{border-left:4px solid var(--amber);background:var(--amber-soft);border-color:#f3d9a8}
+.alert.red{border-left-color:var(--red);background:var(--red-soft)}
+.btn{background:var(--brand);color:#fff;border:none;border-radius:10px;padding:9px 12px;font-size:13px;font-weight:600;cursor:pointer}
+.btn.ghost{background:#fff;color:var(--brand);border:1px solid #d9d0ff}
+.btn.sm{padding:6px 10px;font-size:12px}
+.task{display:flex;gap:10px;align-items:flex-start}
+.task input{width:20px;height:20px;margin-top:2px;accent-color:var(--brand);flex:none}
+.task.done .t{text-decoration:line-through;color:var(--muted)}
+.t{font-size:14px;font-weight:600}
+.d{font-size:12.5px;color:var(--muted);margin-top:2px}
+.bar{height:8px;background:#eee;border-radius:99px;overflow:hidden;margin-top:6px}
+.bar>i{display:block;height:100%;background:var(--brand);border-radius:99px}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.stat{background:#fff;border:1px solid var(--line);border-radius:14px;padding:10px;text-align:center}
+.stat b{display:block;font-size:18px}
+.stat span{font-size:11px;color:var(--muted)}
+.hero{background:linear-gradient(135deg,#7c5cff,#a78bfa);color:#fff;border:none}
+.hero .d{color:#ede9fe}
+.stepper{display:flex;gap:4px;margin-top:10px}
+.stepper div{flex:1;height:6px;border-radius:99px;background:rgba(255,255,255,.35)}
+.stepper div.f{background:#fff}
+.chips-sel button{border:1px solid var(--line);background:#fff;border-radius:999px;padding:6px 10px;font-size:12px;margin:0 6px 6px 0;cursor:pointer}
+.chips-sel button.on{background:var(--brand);color:#fff;border-color:var(--brand)}
+.stage{border:1px solid var(--line);border-radius:14px;background:#fff;margin-bottom:8px;overflow:hidden}
+.stage summary{list-style:none;padding:12px 14px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;font-weight:600;font-size:14px}
+.stage summary::-webkit-details-marker{display:none}
+.stage .body{padding:0 14px 12px;font-size:13px}
+.chk{display:flex;justify-content:space-between;gap:8px;padding:7px 0;border-top:1px dashed var(--line)}
+.chk:first-child{border-top:none}
+.src{font-size:10.5px;color:var(--muted)}
+.titr{display:flex;gap:4px;margin-top:8px}
+.titr div{flex:1;text-align:center;font-size:10.5px;padding:6px 0;border-radius:8px;background:#f1f5f9;color:#64748b}
+.titr div.past{background:var(--brand-soft);color:var(--brand)}
+.titr div.now{background:var(--brand);color:#fff;font-weight:700}
+.toggle{position:relative;width:42px;height:24px;flex:none}
+.toggle input{opacity:0;width:0;height:0}
+.toggle span{position:absolute;inset:0;background:#d1d5db;border-radius:99px;cursor:pointer;transition:.2s}
+.toggle span:before{content:"";position:absolute;width:18px;height:18px;left:3px;top:3px;background:#fff;border-radius:50%;transition:.2s}
+.toggle input:checked+span{background:var(--green)}
+.toggle input:checked+span:before{transform:translateX(18px)}
+.logo{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:17px;flex:none}
+.toast{position:absolute;left:50%;bottom:90px;transform:translateX(-50%) translateY(20px);background:#111;color:#fff;font-size:13px;padding:10px 14px;border-radius:12px;opacity:0;transition:.25s;pointer-events:none;width:max-content;max-width:320px;text-align:center}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.side{width:360px;max-width:100%}
+.side .card{border-radius:14px}
+.side h3{margin:0 0 4px;font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--brand)}
+.side ul{margin:6px 0 0;padding-left:18px;font-size:13px;line-height:1.5}
+.side .note{font-size:12px;color:var(--muted)}
+.tag{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+.summary{font-size:13px;line-height:1.55}
+.summary b{font-weight:650}
+.mood button{flex:1;border:1px solid var(--line);background:#fff;border-radius:10px;padding:8px 0;font-size:18px;cursor:pointer}
+.mood button.on{border-color:var(--brand);background:var(--brand-soft)}
+.hidden{display:none}
+.qgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.qbtn{background:#fff;border:1px solid var(--line);border-radius:14px;padding:12px 4px;font-size:12px;font-weight:600;color:var(--ink);cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px;transition:.15s}
+.qbtn .ic{font-size:22px}
+.qbtn:active{transform:scale(.96)}
+.qbtn.on{border-color:var(--brand);background:var(--brand-soft);color:var(--brand)}
+.qbtn.did{border-color:#bfe8cc;background:var(--green-soft);color:var(--green)}
+.acts{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.act{border:1px solid #d9d0ff;background:#fff;color:var(--brand);border-radius:10px;padding:8px 11px;font-size:12.5px;font-weight:600;cursor:pointer}
+.act.primary{background:var(--brand);color:#fff;border-color:var(--brand)}
+.act:active{transform:scale(.96)}
+.tcard .head{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.tcard.done{background:#f6fbf7;border-color:#cdebd7}
+.tcard.done .t{color:var(--green)}
+.donebadge{font-size:12px;font-weight:700;color:var(--green);display:flex;align-items:center;gap:6px}
+.undo{background:none;border:none;color:var(--muted);font-size:11.5px;text-decoration:underline;cursor:pointer;padding:0}
+.stepperw{display:flex;align-items:center;gap:10px;margin-top:10px}
+.stepperw button{width:38px;height:38px;border-radius:10px;border:1px solid var(--line);background:#fff;font-size:18px;cursor:pointer}
+.stepperw .val{font-size:22px;font-weight:800;min-width:90px;text-align:center}
+.panel{background:#fff;border:1px solid #d9d0ff;border-radius:14px;padding:12px;margin:8px 0 10px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="phone">
+    <div class="status"><span>9:41</span><span>●●● 5G ▮</span></div>
+    <div class="screen" id="screen"></div>
+    <div class="toast" id="toast"></div>
+    <nav class="nav" id="nav"></nav>
+  </div>
+
+  <aside class="side">
+    <div class="card" style="background:#1f2a37;color:#fff;border:none">
+      <div class="tag" style="color:#c4b5fd">Prototype · sample data</div>
+      <div style="font-size:17px;font-weight:700;margin-top:4px">Patient Agency: postpartum GLP-1 journey</div>
+      <div style="font-size:13px;color:#cbd5e1;margin-top:6px;line-height:1.5">
+        <i>"As a millennial parent, I want to act on my health data so that I can be successful in my weight management journey in the postpartum period."</i>
+      </div>
+      <div style="font-size:12px;color:#94a3b8;margin-top:8px">Persona: <b style="color:#fff">Maya, 32</b>, 10 months postpartum, weaned at 7 months, history of gestational diabetes, toddler at home, works full-time. Week 9 on tirzepatide (Zepbound).</div>
+    </div>
+    <div class="card" id="sidepanel"></div>
+    <div class="note" style="padding:0 4px">All people, plans, prices and values are fictional. Not clinical guidance.</div>
+  </aside>
+</div>
+
+<script>
+// ---------- Sample data ----------
+const weights=[196.0,194.8,193.1,192.0,190.2,189.1,187.6,186.4,185.3,184.2];
+const state={tab:'today',mood:null,effects:[],tasks:{weigh:false,ack:false},
+  protein:58,water:3,weightVal:184.2,quick:null,inj:null,strength:null,refill:null,a1c:null,
+  sources:{healthex:true,flexpa:true,pharmacy:true,health:true,calendar:true,food:true}, effectLog:[{w:'Wk 1',e:'Nausea (mild)'},{w:'Wk 5',e:'Constipation (mild)'}]};
+
+const tabs=[
+ {id:'today',label:'Today',ic:'☀️'},
+ {id:'journey',label:'Journey',ic:'🧭'},
+ {id:'progress',label:'Progress',ic:'📈'},
+ {id:'data',label:'My data',ic:'🔗'},
+ {id:'visit',label:'Visit prep',ic:'🩺'}];
+
+const side={
+ today:{title:'Today: daily actions',data:[
+   'Smart scale via Apple Health / Health Connect → auto-logs weight',
+   'Food log (MyFitnessPal) → protein progress',
+   'Calendar → finds a free slot during nap time',
+   'Pharmacy fills (Surescripts) → refill timing',
+   'EHR med list (HealthEx) + Rx dose schedule → contraception alert',
+   'EHR problem list + labs → gestational diabetes follow-up A1c'],
+   why:'Every card turns raw data into one-tap actions that fit a parent\'s day: confirm a synced weight, quick-add protein, book the nap-time slot, choose refill pickup or delivery. Data is pre-filled so she confirms rather than types. The contraception alert is an example of a safety check that needs two separate data sources together.'},
+ journey:{title:'Journey: getting access',data:[
+   'HealthEx: BMI, conditions, labs, postpartum visit notes, breastfeeding status',
+   'Self-report: pregnancy plans, thyroid cancer family history',
+   'Flexpa (payer): formulary, prior auth status, claims',
+   'Surescripts / pharmacy: prescription, fills, stock',
+   'Manufacturer direct-pay programs: cash price fallback'],
+   why:'Postpartum adds extra checks: has she stopped breastfeeding, what are her pregnancy plans, what birth control is she on. Coverage is the biggest drop-off point, so prior auth status is shown openly.'},
+ progress:{title:'Progress: staying on track',data:[
+   'Scale weights (weekly trend)',
+   'Food log protein + wearable strength sessions',
+   'Patient-reported side effects',
+   'Weekly mood check-in (EPDS-style questions)'],
+   why:'Shows that the plan is working, and catches side effects and postpartum mood changes early. Protein and strength training help protect muscle during GLP-1 weight loss.'},
+ data:{title:'My data: consent & control',data:[
+   'Records: HealthEx (TEFCA, verified with CLEAR)',
+   'Insurance: Flexpa (CMS Patient Access API)',
+   'Pharmacy: Surescripts medication history',
+   'Devices: Apple Health / Android Health Connect',
+   'Calendar: Google / Outlook',
+   'Food: MyFitnessPal'],
+   why:'Each source can be turned off separately, and the app explains what stops working without it. Reproductive and mental health data have extra consent prompts.'},
+ visit:{title:'Visit prep: closing the loop',data:[
+   'Auto-generated from all connected sources',
+   'Shared back to clinician via HealthEx / patient portal',
+   'Patient adds her own questions'],
+   why:'Turns months of home data into a 30-second read for the clinician. That makes dose increases and prior auth renewals easier, since many plans re-check progress at around 12–16 weeks.'}
+};
+
+// ---------- Helpers ----------
+const $=s=>document.querySelector(s);
+function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('show');clearTimeout(t._h);t._h=setTimeout(()=>t.classList.remove('show'),2200)}
+function src(...s){return s.map(x=>`<span class="chip">${x}</span>`).join('')}
+function off(key,label){return !state.sources[key]?`<div class="d" style="color:var(--red)">⚠ ${label} disconnected. Reconnect in My data.</div>`:''}
+
+function renderNav(){
+  $('#nav').innerHTML=tabs.map(t=>`<button class="${state.tab===t.id?'on':''}" onclick="go('${t.id}')"><span class="ic">${t.ic}</span>${t.label}</button>`).join('');
+}
+function renderSide(){
+  const s=side[state.tab];
+  $('#sidepanel').innerHTML=`<h3>${s.title}</h3><div class="tag" style="margin-top:10px">Data powering this screen</div><ul>${s.data.map(d=>`<li>${d}</li>`).join('')}</ul><div class="tag" style="margin-top:12px">Why it matters</div><div style="font-size:13px;line-height:1.5;margin-top:4px">${s.why}</div>`;
+}
+function go(t){state.tab=t;render();$('#screen').scrollTop=0}
+
+// ---------- Screens ----------
+function today(){
+  const tk=state.tasks;
+  const doneCount=[tk.weigh,state.protein>=100,state.strength==='done',!!state.refill,!!state.a1c,tk.ack].filter(Boolean).length;
+  return `
+  <h1>Good morning, Maya 👋</h1>
+  <p class="sub">Friday · Week 9 on Zepbound · <b style="color:var(--brand)">${doneCount}/6 done today</b></p>
+
+  <div class="card hero">
+    <div class="row between"><div><div class="d">Since you started</div><div style="font-size:26px;font-weight:800">−11.8 lb</div></div>
+    <div style="text-align:right"><div class="d">Next dose</div><div style="font-weight:700">Sun · 7.5 mg</div></div></div>
+    <div class="stepper"><div class="f"></div><div class="f"></div><div class="f"></div><div></div></div>
+    <div class="d" style="margin-top:6px">Ready ✓ · Covered ✓ · Prescribed ✓ · <b style="color:#fff">On track</b></div>
+  </div>
+
+  ${!tk.ack?`<div class="card alert">
+    <div class="t">⚠️ Heads-up for Sunday's dose increase</div>
+    <div class="d" style="color:#7c4a03">Your record shows you take an <b>oral contraceptive</b>. Tirzepatide can make birth control pills less effective. Use a backup method (like condoms) for <b>4 weeks</b> after each dose increase.</div>
+    ${src('HealthEx · med list','Rx · dose schedule')}
+    <div class="row" style="margin-top:8px"><button class="btn sm" onclick="setTask('ack')">Got it, remind me</button><button class="btn sm ghost" onclick="toast('Message sent to Dr. Rivera\\'s office')">Ask my OB</button></div>
+  </div>`:''}
+
+  <h2>Quick log</h2>
+  <div class="qgrid">
+    ${qbtn('weight','⚖️','Weight',tk.weigh)}
+    ${qbtn('protein','🍳','Protein',state.protein>=100)}
+    ${qbtn('water','💧',`Water · ${state.water}/8`,state.water>=8)}
+    ${qbtn('inject','💉','Injection',!!state.inj)}
+    ${qbtn('effect','🤢','Side effect',false)}
+    ${qbtn('mood','💜','Mood',state.mood!==null)}
+  </div>
+  ${quickPanel()}
+
+  <h2>Today's actions</h2>
+  ${actionCard({done:tk.weigh,t:'Weigh in',d:`Your scale sent <b>${state.weightVal.toFixed(1)} lb</b> at 6:48 am. Confirm it?`,doneText:`Logged ${state.weightVal.toFixed(1)} lb`,
+     acts:[['primary',`✓ Confirm ${state.weightVal.toFixed(1)} lb`,"confirmWeight()"],['','Edit',"openQuick('weight')"]],undo:"undoT('weigh')",chips:src('Withings scale'),warn:off('health','Device data')})}
+  ${actionCard({done:state.protein>=100,t:'Hit your protein goal',d:`<b>${state.protein} of 100 g</b> so far. Tap to add a snack:`,doneText:`Protein goal hit · ${state.protein} g`,
+     acts:[['','+ Greek yogurt · 20 g',"addProtein(20)"],['','+ Protein shake · 25 g',"addProtein(25)"],['','+ 2 eggs · 12 g',"addProtein(12)"],['','+ Chicken · 30 g',"addProtein(30)"]],
+     extra:`<div class="bar"><i style="width:${Math.min(100,state.protein)}%"></i></div>`,undo:"resetProtein()",chips:src('MyFitnessPal'),warn:off('food','Food log')})}
+  ${actionCard({done:state.strength==='done',t:'20-min strength session',
+     d:state.strength==='scheduled'?'Scheduled for <b>1:00 pm</b> during nap time. Ready when you are.':'You\'re free <b>1:00–1:30 pm</b> during nap time. Strength training helps keep muscle while you lose weight.',
+     doneText:'Strength session done 💪',
+     acts:state.strength==='scheduled'?[['primary','▶ Start workout',"doStrength('done')"],['','Snooze to 8 pm',"toast('Moved to 8:00 pm after bedtime')"]]:[['primary','📅 Book 1:00 pm',"doStrength('scheduled')"],['','▶ Start now',"doStrength('done')"],['','Skip today',"toast('No problem. We\\'ll suggest tomorrow\\'s nap slot.')"]],
+     undo:"doStrength(null)",chips:src('Google Calendar','Apple Watch'),warn:off('calendar','Calendar')})}
+  ${actionCard({done:!!state.refill,t:'Refill Zepbound',d:'1 pen left. Copay <b>$25</b> (prior auth approved through Jan 28).',
+     doneText:state.refill==='delivery'?'Delivery set for Wed · $25':'Pickup Thu after 10 am · $25',
+     acts:[['primary','🏪 Pick up Thu',"doRefill('pickup')"],['','🚚 Deliver Wed',"doRefill('delivery')"]],undo:"doRefill(null)",chips:src('Pharmacy','Insurance'),warn:off('pharmacy','Pharmacy')})}
+  ${actionCard({done:!!state.a1c,t:'Get your A1c test',d:'Because you had gestational diabetes, regular diabetes screening is recommended. Last A1c: 5.9% (Feb).',
+     doneText:state.a1c==='booked'?'Lab booked · Sat 9:00 am':'Lab order requested from Dr. Rivera',
+     acts:[['primary','🧪 Book Sat 9:00 am',"doA1c('booked')"],['','Request order',"doA1c('requested')"]],undo:"doA1c(null)",chips:src('HealthEx · labs','Problem list'),warn:off('healthex','Medical records')})}
+
+  <h2 id="moodsec">How are you feeling?</h2>
+  <div class="card">
+    <div class="t">Mood this week</div>
+    <div class="row mood" style="margin-top:8px">${['😞','😕','😐','🙂','😄'].map((e,i)=>`<button class="${state.mood===i?'on':''}" onclick="setMood(${i})">${e}</button>`).join('')}</div>
+    ${state.mood!==null?(state.mood<=1?`<div class="card alert red" style="margin:10px 0 0"><div class="t">Thanks for sharing 💜</div><div class="d" style="color:#7f1d1d">Feeling low after having a baby is common, and support helps. Want us to share a note with your OB, or connect you with a postpartum support line? If you're in crisis, call or text <b>988</b>.</div><div class="row" style="margin-top:8px"><button class="btn sm" onclick="toast('Note shared with Dr. Rivera')">Share with my OB</button><button class="btn sm ghost" onclick="toast('Opening support resources')">Support resources</button></div></div>`:`<div class="d" style="margin-top:8px">Logged. We'll include this trend in your visit summary.</div>`):''}
+  </div>
+
+  <h2 id="effectsec">Any side effects?</h2>
+  <div class="card">
+    <div class="chips-sel">${['Nausea','Constipation','Reflux','Fatigue','Belly pain','None'].map(e=>`<button class="${state.effects.includes(e)?'on':''}" onclick="toggleEffect('${e}')">${e}</button>`).join('')}</div>
+    ${effectTips()}
+  </div>`;
+}
+function qbtn(k,ic,label,did){
+  return `<button class="qbtn ${state.quick===k?'on':did?'did':''}" onclick="openQuick('${k}')"><span class="ic">${did&&state.quick!==k?'✅':ic}</span>${label}</button>`;
+}
+function actionCard(o){
+  if(o.done) return `<div class="card tcard done"><div class="head"><div class="donebadge">✅ ${o.doneText}</div><button class="undo" onclick="${o.undo}">Undo</button></div></div>`;
+  const acts=o.acts.map(([c,l,fn])=>`<button class="act ${c}" onclick="${fn}">${l}</button>`).join('');
+  return `<div class="card tcard"><div class="t">${o.t}</div><div class="d">${o.d}</div>${o.extra||''}<div class="acts">${acts}</div>${o.chips}${o.warn}</div>`;
+}
+function quickPanel(){
+  const q=state.quick; if(!q) return '';
+  if(q==='weight') return `<div class="panel"><div class="t">Log weight</div>
+    <div class="stepperw"><button onclick="adjW(-0.2)">−</button><div class="val">${state.weightVal.toFixed(1)}<span style="font-size:13px;font-weight:600"> lb</span></div><button onclick="adjW(0.2)">+</button>
+    <button class="act primary" style="margin-left:auto" onclick="confirmWeight()">Save</button></div></div>`;
+  if(q==='protein') return `<div class="panel"><div class="t">Add protein · ${state.protein}/100 g</div><div class="acts">
+    ${[['Greek yogurt',20],['Protein shake',25],['2 eggs',12],['Chicken breast',30],['Cottage cheese',14],['Protein bar',15]].map(([n,g])=>`<button class="act" onclick="addProtein(${g})">${n} · ${g} g</button>`).join('')}</div></div>`;
+  if(q==='water') return `<div class="panel"><div class="t">Water · ${state.water} of 8 glasses</div><div class="d">Fluids help with nausea and constipation on GLP-1s.</div><div class="acts">
+    <button class="act primary" onclick="addWater(1)">+ 1 glass</button><button class="act" onclick="addWater(2)">+ Water bottle (2)</button><button class="act" onclick="addWater(-1)">− 1</button></div></div>`;
+  if(q==='inject') return `<div class="panel"><div class="t">Weekly injection</div><div class="d">${state.inj?`Logged: ${state.inj}`:'Next dose: <b>Sun · 7.5 mg</b> (first dose at new strength).'}</div><div class="acts">
+    <button class="act primary" onclick="logInj('7.5 mg · today')">💉 Log dose now</button><button class="act" onclick="toast('Reminder set: Sun 8:00 am')">⏰ Remind me Sun 8 am</button><button class="act" onclick="toast('Showing injection-site rotation guide')">Site rotation tips</button></div></div>`;
+  return '';
+}
+function effectTips(){
+  const e=state.effects; if(!e.length) return '<div class="d">Tap any you\'ve noticed this week.</div>';
+  if(e.includes('None')) return '<div class="d">Great, logged as no side effects this week.</div>';
+  let tips=[];
+  if(e.includes('Nausea')) tips.push('<b>Nausea:</b> smaller meals, stop eating when full, go easy on greasy food.');
+  if(e.includes('Constipation')) tips.push('<b>Constipation:</b> more water and fiber; gentle walks help.');
+  if(e.includes('Reflux')) tips.push('<b>Reflux:</b> avoid lying down within 2–3 hours of eating.');
+  if(e.includes('Fatigue')) tips.push('<b>Fatigue:</b> check protein and fluids; with a toddler, sleep counts too.');
+  let html=`<div class="d" style="line-height:1.5">${tips.join('<br>')}</div>`;
+  if(e.includes('Belly pain')) html+=`<div class="card alert red" style="margin:10px 0 0"><div class="t">Severe or lasting belly pain?</div><div class="d" style="color:#7f1d1d">Contact your clinician right away. Severe pain, especially with vomiting or pain spreading to your back, can be a sign of pancreatitis or a gallbladder problem.</div><button class="btn sm" style="margin-top:8px" onclick="toast('Calling Dr. Rivera\\'s office…')">Call my clinician</button></div>`;
+  html+=`<button class="btn sm ghost" style="margin-top:10px" onclick="logEffects()">Save to my log</button>`;
+  return html;
+}
+
+function journey(){
+  const chk=(l,v,s,c='ok')=>`<div class="chk"><div>${l}<div class="src">${s}</div></div><span class="pill ${c}">${v}</span></div>`;
+  return `
+  <h1>Your journey</h1><p class="sub">From "is this right for me?" to staying on track</p>
+
+  <details class="stage" open><summary>1 · Readiness check <span class="pill ok">Done</span></summary><div class="body">
+    ${chk('BMI at start','32.6','HealthEx · vitals from PCP, Jul 2026')}
+    ${chk('Weight-related condition','Prediabetes (A1c 5.9%)','HealthEx · labs')}
+    ${chk('History of gestational diabetes','Yes','HealthEx · OB problem list','info')}
+    ${chk('Breastfeeding','Weaned at 7 months','HealthEx · postpartum visit + self-report')}
+    ${chk('Pregnancy plans (next 12 months)','Not planning','Self-report')}
+    ${chk('Thyroid cancer / MEN2 history','None','HealthEx + self-report')}
+    ${chk('Postpartum mood screen (EPDS)','6 · low risk','HealthEx · OB visit')}
+    ${chk('Contraception','Oral pill','HealthEx · med list','warn')}
+    <div class="d" style="margin-top:8px">💡 If Maya were still breastfeeding or planning a pregnancy, the app would pause here and suggest a lifestyle-first plan until she's ready.</div>
+  </div></details>
+
+  <details class="stage"><summary>2 · Coverage & prior auth <span class="pill ok">Approved</span></summary><div class="body">
+    <div class="d">Your plan: <b>Sample PPO</b> · Zepbound is covered with prior authorization</div>
+    ${chk('BMI documented ≥30 (or ≥27 + condition)','Met','Auto-pulled from EHR')}
+    ${chk('Weight-related condition documented','Met','Auto-pulled from EHR')}
+    ${chk('Lifestyle program participation','Met','Patient Agency activity log attached')}
+    <div class="tag" style="margin-top:10px">Prior auth timeline</div>
+    ${chk('Submitted by Dr. Rivera','Jul 21','Electronic prior auth')}
+    ${chk('Approved','Jul 28','Payer API · good through Jan 28')}
+    ${chk('Re-authorization due','Jan 2027','Plan requires showing ~5% weight loss','info')}
+    <div class="card" style="margin:10px 0 0;background:#fafafa"><div class="t" style="font-size:13px">If coverage had been denied…</div><div class="d">Patient Agency would show appeal steps, a cash-pay option through the manufacturer's direct program, and HSA/FSA eligibility side by side.</div></div>
+  </div></details>
+
+  <details class="stage"><summary>3 · Prescription & pharmacy <span class="pill ok">Active</span></summary><div class="body">
+    ${chk('Medication','Zepbound (tirzepatide)','Surescripts')}
+    ${chk('Started','Jul 31 · 2.5 mg weekly','Pharmacy fill')}
+    ${chk('Pharmacy stock','In stock','Pharmacy')}
+    ${chk('Copay','$25 / month','Claims')}
+  </div></details>
+
+  <details class="stage" open><summary>4 · Dose schedule <span class="pill brandp">Week 9</span></summary><div class="body">
+    <div class="d">The dose goes up every 4 weeks, as tolerated, with your clinician.</div>
+    <div class="titr"><div class="past">2.5</div><div class="past">5</div><div class="now">7.5<br>Sun</div><div>10</div><div>12.5</div><div>15</div></div>
+    <div class="d" style="margin-top:8px">🔔 Before each step up, Patient Agency checks: side effects this month, backup contraception, refill timing.</div>
+  </div></details>`;
+}
+
+function progress(){
+  const w=320,h=150,p=24,min=166,max=198;
+  const x=i=>p+i*(w-2*p)/(weights.length-1), y=v=>h-p-(v-min)*(h-2*p)/(max-min);
+  const path=weights.map((v,i)=>`${i?'L':'M'}${x(i).toFixed(1)},${y(v).toFixed(1)}`).join(' ');
+  const goalY=y(168);
+  const moodScores=[8,7,7,6,6,5,6,5,4];
+  return `
+  <h1>Progress</h1><p class="sub">9 weeks on Zepbound</p>
+  <div class="stats">
+    <div class="stat"><b>−11.8</b><span>lb lost</span></div>
+    <div class="stat"><b>6.0%</b><span>of body weight</span></div>
+    <div class="stat"><b>16.2</b><span>lb to pre-pregnancy</span></div>
+  </div>
+  <div class="card" style="margin-top:10px">
+    <div class="row between"><div class="t">Weight trend</div><span class="pill ok">On pace</span></div>
+    <svg viewBox="0 0 ${w} ${h}" width="100%" style="margin-top:6px">
+      <line x1="${p}" x2="${w-p}" y1="${goalY}" y2="${goalY}" stroke="#16a34a" stroke-dasharray="4 4"/>
+      <text x="${w-p}" y="${goalY-5}" font-size="10" text-anchor="end" fill="#16a34a">Pre-pregnancy · 168</text>
+      <path d="${path}" fill="none" stroke="#7c5cff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+      ${weights.map((v,i)=>`<circle cx="${x(i)}" cy="${y(v)}" r="3" fill="#7c5cff"/>`).join('')}
+      <text x="${p}" y="${h-6}" font-size="10" fill="#6b7280">Wk 0 · 196</text>
+      <text x="${w-p}" y="${h-6}" font-size="10" text-anchor="end" fill="#6b7280">Wk 9 · 184.2</text>
+    </svg>
+    <div class="d">✅ You've passed 5% weight loss, which your plan checks at re-authorization.</div>
+  </div>
+  <div class="card">
+    <div class="t">Muscle protection</div>
+    <div class="row between d" style="margin-top:6px"><span>Avg protein / day</span><b style="color:var(--ink)">82 g of 100</b></div><div class="bar"><i style="width:82%"></i></div>
+    <div class="row between d" style="margin-top:10px"><span>Strength sessions this week</span><b style="color:var(--ink)">1 of 2</b></div><div class="bar"><i style="width:50%"></i></div>
+  </div>
+  <div class="card">
+    <div class="row between"><div class="t">Postpartum mood (weekly check-in)</div><span class="pill ok">Improving</span></div>
+    <div class="row" style="align-items:flex-end;gap:6px;height:70px;margin-top:10px">${moodScores.map(s=>`<div style="flex:1;background:#c4b5fd;border-radius:6px 6px 0 0;height:${s*7}px"></div>`).join('')}</div>
+    <div class="d" style="margin-top:6px">Lower is better. Trending down from 8 to 4.</div>
+  </div>
+  <div class="card">
+    <div class="t">Side effect log</div>
+    ${state.effectLog.map(l=>`<div class="chk"><span>${l.e}</span><span class="src">${l.w}</span></div>`).join('')}
+  </div>`;
+}
+
+function data(){
+  const items=[
+   ['healthex','🏥','#e8f0ff','Medical records','HealthEx · 4 providers (OB, PCP, labs, hospital)','Eligibility, labs, med list, postpartum notes'],
+   ['flexpa','🛡️','#e8f7ee','Insurance','Flexpa · Sample PPO','Coverage, prior auth, copays'],
+   ['pharmacy','💊','#fff4e0','Pharmacy','Surescripts · neighborhood pharmacy','Refills, stock, dose history'],
+   ['health','⌚','#fdecec','Devices','Apple Health · scale, watch','Weight, activity, sleep'],
+   ['calendar','📅','#efeaff','Calendar','Google Calendar','Finding time for workouts & visits'],
+   ['food','🥗','#e8f7ee','Food log','MyFitnessPal','Protein & nutrition']];
+  return `
+  <h1>My data</h1><p class="sub">You choose what Patient Agency can use. Turn any source off anytime.</p>
+  ${items.map(([k,ic,bg,t,s,u])=>`<div class="card"><div class="row"><div class="logo" style="background:${bg}">${ic}</div><div style="flex:1"><div class="t">${t}</div><div class="d">${s}</div><div class="src" style="margin-top:3px">Used for: ${u}</div></div>
+   <label class="toggle"><input type="checkbox" ${state.sources[k]?'checked':''} onchange="toggleSrc('${k}','${t}')"><span></span></label></div>
+   <div class="src" style="margin-top:6px">${state.sources[k]?'● Synced 6 min ago':'○ Off'}</div></div>`).join('')}
+  <div class="card" style="background:#fafafa"><div class="t">🔒 Sensitive data</div><div class="d">Reproductive health and mental health info is only used for safety checks and is never shared without asking you each time.</div></div>
+  <button class="btn ghost" style="width:100%" onclick="toast('+ Connect a source: telehealth, lab, employer program…')">+ Connect another source</button>`;
+}
+
+function visit(){
+  return `
+  <h1>Visit prep</h1><p class="sub">12-week check-in · Dr. Rivera (OB/GYN) · Oct 23</p>
+  <div class="card summary">
+    <div class="tag">Auto-generated summary</div>
+    <p style="margin:8px 0"><b>Medication:</b> Zepbound, now 5 mg (weeks 5–8), stepping up to 7.5 mg Oct 4. 100% of doses taken on time.</p>
+    <p style="margin:8px 0"><b>Weight:</b> 196.0 → 184.2 lb (−6.0%) over 9 weeks.</p>
+    <p style="margin:8px 0"><b>Side effects:</b> mild nausea (week 1), mild constipation (week 5). None currently.</p>
+    <p style="margin:8px 0"><b>Mood:</b> weekly check-in trending better (8 → 4).</p>
+    <p style="margin:8px 0"><b>Lifestyle:</b> avg 82 g protein/day; 1–2 strength sessions/week.</p>
+    <p style="margin:8px 0"><b>Open items:</b> A1c due (GDM history; last 5.9%, Feb). Backup contraception reminder acknowledged.</p>
+  </div>
+  <div class="card">
+    <div class="t">My questions</div>
+    <div class="d">• Should I consider switching to a non-pill birth control?<br>• What should I do about my medication if we plan another pregnancy?</div>
+    <textarea placeholder="Add a question…" style="width:100%;margin-top:8px;border:1px solid var(--line);border-radius:10px;padding:8px;font:inherit;font-size:13px;height:56px"></textarea>
+  </div>
+  <button class="btn" style="width:100%" onclick="toast('Summary shared with Dr. Rivera via patient portal')">Share with Dr. Rivera</button>
+  <button class="btn ghost" style="width:100%;margin-top:8px" onclick="toast('PDF saved')">Download PDF</button>`;
+}
+
+// ---------- Actions ----------
+function setTask(k){state.tasks[k]=!state.tasks[k]; if(k==='ack'&&state.tasks[k]) toast('Reminder set for Sun, Oct 4 + 4-week backup reminder'); render()}
+function setMood(i){state.mood=i;render()}
+function toggleEffect(e){
+  if(e==='None'){state.effects=state.effects.includes('None')?[]:['None']}
+  else{state.effects=state.effects.filter(x=>x!=='None'); state.effects.includes(e)?state.effects=state.effects.filter(x=>x!==e):state.effects.push(e)}
+  render();
+}
+function logEffects(){state.effectLog.push({w:'Wk 9',e:state.effects.join(', ')});state.effects=[];toast('Saved, and added to your visit summary');render()}
+function toggleSrc(k,t){state.sources[k]=!state.sources[k];toast(state.sources[k]?t+' reconnected':t+' disconnected. Related reminders paused.');render()}
+
+function openQuick(k){
+  if(k==='effect'||k==='mood'){state.quick=null;render();document.getElementById(k==='mood'?'moodsec':'effectsec').scrollIntoView({behavior:'smooth',block:'start'});return}
+  state.quick=state.quick===k?null:k;render();
+}
+function adjW(d){state.weightVal=Math.round((state.weightVal+d)*10)/10;render()}
+function confirmWeight(){state.tasks.weigh=true;state.quick=null;toast(`Weight logged: ${state.weightVal.toFixed(1)} lb`);render()}
+function undoT(k){state.tasks[k]=false;render()}
+function addProtein(g){const before=state.protein;state.protein+=g;toast(state.protein>=100&&before<100?`🎉 Protein goal hit: ${state.protein} g`:`+${g} g protein · ${state.protein}/100 g`);render()}
+function resetProtein(){state.protein=58;render()}
+function addWater(n){state.water=Math.max(0,Math.min(12,state.water+n));if(n>0)toast(`💧 ${state.water}/8 glasses`);render()}
+function logInj(v){state.inj=v;state.quick=null;toast('💉 Dose logged. Backup contraception reminder started.');render()}
+function doStrength(s){state.strength=s;if(s==='scheduled')toast('📅 Added to calendar: 1:00 pm Strength (20 min)');if(s==='done')toast('💪 Nice work! Logged to Apple Health');render()}
+function doRefill(s){state.refill=s;if(s)toast(s==='pickup'?'Refill requested: pickup Thu after 10 am':'Refill requested: delivery Wed');render()}
+function doA1c(s){state.a1c=s;if(s)toast(s==='booked'?'🧪 Booked: Sat 9:00 am at the lab':'Lab order request sent to Dr. Rivera');render()}
+
+function render(){
+  const screens={today,journey,progress,data,visit};
+  $('#screen').innerHTML=screens[state.tab]();
+  renderNav();renderSide();
+}
+render();
+</script>
+</body>
+</html>
