@@ -471,17 +471,17 @@ def profile_from_json(data) -> dict:
     return patient_profile(resources) if resources else _profile_from_body(data if isinstance(data, dict) else {})
 
 
-def stored_profile(source="connected") -> dict | None:
+def stored_resources(source="connected") -> list[dict]:
     if source == "sample":
         resources = storage.load_resources(namespace=SAMPLE_NAMESPACE)
     elif source == "connected":
         connection = storage.load_connection()
         if not connection:
-            return None
+            return []
         connection = connection[0]
         patient_id = connection.get("patient_id")
         if not patient_id or not connection.get("fhir_base_url"):
-            return None
+            return []
         resources = storage.load_resources(namespace=connection["fhir_base_url"])
         # A server namespace can contain previous patients. Never combine them.
         resources = [r for r in resources if
@@ -491,7 +491,12 @@ def stored_profile(source="connected") -> dict | None:
                      (r.get("resourceType") != "Patient" and
                       (r.get("subject") or r.get("patient") or {}).get("reference") == "Patient/" + patient_id)]
     else:
-        return None
+        return []
+    return resources
+
+
+def stored_profile(source="connected") -> dict | None:
+    resources = stored_resources(source)
     return patient_profile(resources) if resources else None
 
 

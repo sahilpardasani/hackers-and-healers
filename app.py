@@ -28,6 +28,7 @@ load_dotenv()
 
 import endpoint_directory
 import clinicaltrial
+import health_assistant
 import storage
 from sample_data import SAMPLE_NAMESPACE, sample_resources
 from ckm import summarize
@@ -58,6 +59,8 @@ app.add_middleware(
 )
 app.mount("/static", StaticFiles(directory="static"), name="static")
 app.include_router(clinicaltrial.router)
+app.include_router(health_assistant.router)
+health_assistant.health = health_assistant.router
 app.extensions: dict = {}
 
 templates = Jinja2Templates(directory="templates")

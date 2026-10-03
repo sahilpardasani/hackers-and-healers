@@ -111,6 +111,7 @@
       <button id="tab-progress" class="tab" role="tab" aria-controls="panel-progress" aria-selected="false" tabindex="-1" data-tab-target="progress">Progress</button>
       <button id="tab-visit" class="tab" role="tab" aria-controls="panel-visit" aria-selected="false" tabindex="-1" data-tab-target="visit">Visit prep</button>
       <button id="tab-trials" class="tab" role="tab" aria-controls="panel-trials" aria-selected="false" tabindex="-1" data-tab-target="trials">Clinical trials</button>
+      <button id="tab-health" class="tab" role="tab" aria-controls="panel-health" aria-selected="false" tabindex="-1" data-tab-target="health">Ask about your health</button>
       <button id="tab-my-data" class="tab" role="tab" aria-controls="panel-my-data" aria-selected="false" tabindex="-1" data-tab-target="my-data">My data</button>
     </nav>
 
@@ -175,8 +176,23 @@
       <p id="trial-status" role="status" aria-live="polite"></p><div id="trial-results" class="trial-results"></div>
     </section>
 
+    <section id="panel-health" class="tab-panel" role="tabpanel" aria-labelledby="tab-health" tabindex="0" data-tab-panel="health" hidden>
+      <div class="section-heading"><div><p class="eyebrow">Make sense of your record</p><h1>Ask about your health</h1><p class="muted">A plain-language explanation, with questions to take to your care team.</p></div><span class="step-chip">AI · NVIDIA</span></div>
+      <section class="card"><h2>Your record, explained</h2><p>This optional feature sends your question and the context below to NVIDIA’s hosted GLM model. Unlike the rest of this local dashboard, this is external processing. Names, record IDs, addresses, and exact birth dates are excluded from the structured context; it still contains sensitive health information. Don’t put identifying details in your question.</p><p class="fine-print">Prototype for sandbox or fictional data. No claim of HIPAA compliance or NVIDIA zero retention is made. Review provider terms before any real-patient use.</p><details><summary>Review exactly which record context will be sent</summary><pre id="health-context" class="health-context">Open this tab to load the local preview.</pre></details><p id="health-config" role="status"></p></section>
+      <form id="health-form" class="card">
+        <label for="health-question"><h2>What would you like to understand?</h2></label>
+        <textarea id="health-question" rows="4" maxlength="1200" required placeholder="Explain my recent results and what I should ask my clinician."></textarea>
+        <div class="choice-row"><button type="button" data-health-prompt="Explain my recent results in simple terms. Which results are missing or old?">Explain my results</button><button type="button" data-health-prompt="What questions should I take to my next appointment?">Prepare for my visit</button><button type="button" data-health-prompt="Which retrieved clinical trials might be worth discussing with my clinician, and what eligibility details are still unknown?">Explore research</button></div>
+        <label class="consent-row"><input id="health-consent" type="checkbox" required><span>I agree to send my question and the previewed health context to NVIDIA for this explanation.</span></label>
+        <label class="consent-row"><input id="health-trials" type="checkbox"><span>Also find clinical trials. I agree to send the previewed condition/search topics to ClinicalTrials.gov, and the retrieved study details to NVIDIA.</span></label>
+        <p class="fine-print">Answers use the current question and record only—not earlier messages. Nothing from this conversation is saved by this app; external provider policies still apply. This is not a clinician or emergency service. For urgent symptoms, seek immediate medical help.</p>
+        <div class="summary-actions"><button id="health-send" class="button button-primary" disabled>Ask about my record</button><button id="health-clear" type="button" class="button button-secondary">Clear &amp; refresh context</button></div>
+      </form>
+      <p id="health-status" role="status" aria-live="polite"></p><div id="health-answer" class="card health-answer" hidden></div><div id="health-trial-results"></div>
+    </section>
+
     <section id="panel-my-data" class="tab-panel" role="tabpanel" aria-labelledby="tab-my-data" tabindex="0" data-tab-panel="my-data" hidden>
-      <div class="section-heading"><div><p class="eyebrow">Your data, your choice</p><h1>My data</h1><p class="muted">Everything stays local to this prototype.</p></div></div>
+      <div class="section-heading"><div><p class="eyebrow">Your data, your choice</p><h1>My data</h1><p class="muted">Records are stored locally. Optional AI explanations and trial searches share the context you approve with external providers.</p></div></div>
       <section class="card source-card"><div class="source-card-icon">⌁</div><div><p class="eyebrow">{{ 'Sample source' if sample_mode else 'Connected source' }}</p><h2>{{ connection.display_name or connection.fhir_base_url }}</h2><p class="muted">{% if sample_mode %}Loaded from the repository’s fictional Maya FHIR bundle.{% else %}Last sync: {{ last_sync or 'Not synced yet' }}{% endif %}</p></div><span class="connected-label">{{ 'Synthetic' if sample_mode else 'Connected' }}</span></section>
       {% if sample_mode %}
       <section class="card"><h2>Sample record store</h2><p>{{ counts.values()|sum }} fictional records are stored separately from any Epic connection. No access token or scheduled sync is used.</p><a href="{{ url_for('sample_json') }}">View the stored FHIR JSON</a></section>
@@ -192,5 +208,6 @@
   <footer class="footer"><span>Patient Agency · prototype</span><a href="{{ url_for('terms') }}">Terms &amp; conditions</a></footer>
   <script src="{{ url_for('static', filename='app.js') }}"></script>
   <script src="{{ url_for('static', filename='trials.js') }}"></script>
+  <script src="{{ url_for('static', filename='health.js') }}"></script>
 </body>
 </html>

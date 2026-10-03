@@ -121,3 +121,8 @@ body:has(.demo-preview:not([hidden]))::before{content:"";position:fixed;inset:0;
   0%, 100% { opacity: 1; }
   50% { opacity: 0.4; }
 }
+.health-context { white-space: pre-wrap; overflow-wrap: anywhere; max-height: 350px; overflow: auto; font-size: 13px; }
+.health-answer { white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.7; }
+#health-question { width: 100%; box-sizing: border-box; padding: 14px; font: inherit; border: 1px solid #d8dbe5; border-radius: 12px; }
+.tabbar { overflow-x: auto; }
+.tabbar .tab { flex-shrink: 0; }
