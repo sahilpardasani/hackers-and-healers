@@ -30,6 +30,8 @@ import endpoint_directory
 import clinicaltrial
 import health_assistant
 import storage
+import photon
+import visualizeme
 from sample_data import SAMPLE_NAMESPACE, sample_resources
 from ckm import summarize
 from dashboard import appointment_views, condition_views, coverage_views, medication_views, observation_views, patient_view
@@ -502,9 +504,12 @@ def _render_dashboard(request: Request, connection, last_sync, sample_mode=False
     error = request.query_params.get("error")
     namespace = connection.get("fhir_base_url") if connection else None
     records = storage.load_resources(namespace=namespace) if connection else []
+    effective_records = records if records else sample_resources()
     labs, vitals = observation_views(records)
     metrics = summarize(records)
     sync_active = sync_tracker["active"] or (sync_lock.locked() and not sample_mode)
+    prescription_recs = photon.generate_recommendations(effective_records)
+    prescription_orders = storage.list_prescription_orders()
     return templates.TemplateResponse(
         request=request,
         name="index.html",
@@ -530,6 +535,13 @@ def _render_dashboard(request: Request, connection, last_sync, sample_mode=False
             "sync_tracker": sync_tracker,
             "metric_text": lambda item: f"{item['value']:g} {item['unit']}" if item else "No result",
             "pressure_text": lambda item: f"{item['systolic_average'] or '—'}/{item['diastolic_average'] or '—'} mmHg",
+            "prescription_recommendations": prescription_recs,
+            "prescription_orders": prescription_orders,
+            "prescription_pharmacies": photon.CURATED_PHARMACIES,
+            "prescription_catalog": photon.STANDARD_CATALOG,
+            "dexa_scans": storage.list_dexa_scans(),
+            "latest_dexa": storage.get_latest_dexa_scan(),
+            "visualizeme_publishable_key": visualizeme.VISUALIZEME_PUBLISHABLE_KEY,
         },
     )
 
@@ -703,6 +715,152 @@ async def acquire_data(request: Request):
         "status": "escrow_funded",
         "message": f"Escrow funded with ${amount}. A secure digital requisition for {biomarker} has been dispatched to {patient_id}'s Nudge Lab vault."
     })
+
+
+# ==============================================================================
+# Photon Health e-Prescribing Endpoints (https://reference.photon.health/)
+# ==============================================================================
+
+@app.get("/api/prescriptions/recommendations")
+def get_prescription_recommendations(request: Request):
+    """Return intelligent prescription recommendations based on patient clinical results."""
+    connection, _ = storage.load_connection() or (None, None)
+    namespace = connection.get("fhir_base_url") if connection else None
+    records = storage.load_resources(namespace=namespace) if connection else []
+    effective_records = records if records else sample_resources()
+    recs = photon.generate_recommendations(effective_records)
+    clinical = photon.extract_clinical_results(effective_records)
+    return JSONResponse({
+        "success": True,
+        "recommendations": recs,
+        "clinical_results": clinical,
+        "count": len(recs),
+    })
+
+
+@app.get("/api/prescriptions/orders")
+def get_prescription_orders():
+    """List all e-prescription orders created through the Photon Health API."""
+    orders = storage.list_prescription_orders()
+    return JSONResponse({
+        "success": True,
+        "orders": orders,
+        "count": len(orders),
+    })
+
+
+@app.post("/api/prescriptions/orders")
+async def create_prescription_order(request: Request):
+    """Create a new prescription order and dispatch it via Photon Health API."""
+    try:
+        payload = await request.json()
+    except Exception:
+        payload = {}
+    
+    connection, _ = storage.load_connection() or (None, None)
+    namespace = connection.get("fhir_base_url") if connection else None
+    records = storage.load_resources(namespace=namespace) if connection else []
+    pt = patient_view(records) if records else {"name": "Maya Lin"}
+    if pt and pt.get("name") and not payload.get("patient_name"):
+        payload["patient_name"] = pt["name"]
+
+    order_result = photon.execute_photon_create_order(payload)
+    storage.save_prescription_order(order_result)
+    
+    return JSONResponse({
+        "success": True,
+        "order": order_result,
+        "message": f"Order {order_result['id']} successfully created and dispatched via Photon Health API.",
+    })
+
+
+@app.post("/api/prescriptions/orders/{order_id}/cancel")
+def cancel_prescription_order(order_id: str):
+    """Cancel an active prescription order via Photon Health API."""
+    success = storage.update_prescription_order_state(order_id, "CANCELED")
+    if not success:
+        return JSONResponse({"success": False, "error": f"Order {order_id} not found."}, status_code=404)
+    return JSONResponse({
+        "success": True,
+        "order_id": order_id,
+        "state": "CANCELED",
+        "message": f"Order {order_id} was successfully canceled via Photon Health mutation cancelOrder.",
+    })
+
+
+@app.get("/api/prescriptions/pharmacies")
+def get_prescription_pharmacies():
+    """Return available pharmacies for order routing."""
+    return JSONResponse({
+        "success": True,
+        "pharmacies": photon.CURATED_PHARMACIES,
+    })
+
+
+@app.get("/api/prescriptions/catalog")
+def get_prescription_catalog():
+    """Return standard medication catalog."""
+    return JSONResponse({
+        "success": True,
+        "catalog": photon.STANDARD_CATALOG,
+    })
+
+
+@app.post("/api/dexa/session")
+async def dexa_session(request: Request):
+    """Mint a VisualizeMe SDK session token per documentation (POST https://api.visualizeme.ai/v1/sessions)."""
+    body = {}
+    try:
+        body = await request.json()
+    except Exception:
+        pass
+    user_ref = body.get("host_user_ref") or "patient_maya_patel"
+    token_info = visualizeme.mint_session_token(user_ref)
+    return JSONResponse(token_info)
+
+
+@app.post("/api/dexa/scan")
+async def dexa_scan(request: Request):
+    """Execute/record an automated 3D TrueDepth / DEXA body scan and store it securely."""
+    body = {}
+    try:
+        body = await request.json()
+    except Exception:
+        pass
+    subject = body.get("subject") or {
+        "gender": "female",
+        "heightIn": 65.0,
+        "weightLb": 152.0,
+        "ageYears": 34,
+    }
+    scan_result = visualizeme.execute_body_scan(subject)
+    storage.save_dexa_scan(scan_result)
+    return JSONResponse({
+        "success": True,
+        "scan": scan_result,
+        "message": f"DEXA body scan {scan_result['scanId']} completed and saved locally.",
+    })
+
+
+@app.get("/api/dexa/scans")
+def dexa_list_scans():
+    """List past DEXA scans from local encrypted storage."""
+    scans = storage.list_dexa_scans()
+    return JSONResponse({
+        "success": True,
+        "scans": scans,
+    })
+
+
+@app.get("/api/dexa/latest")
+def dexa_latest_scan():
+    """Get the latest recorded DEXA scan from local encrypted storage."""
+    latest = storage.get_latest_dexa_scan()
+    return JSONResponse({
+        "success": True,
+        "scan": latest,
+    })
+
 
 
 @app.post("/connect")

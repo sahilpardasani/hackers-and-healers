@@ -278,6 +278,32 @@
         if (val < 60) return { text: 'Reduced renal function (<60)', badge: '< 60 mL/min', cls: 'badge-warning' };
         return { text: 'Normal renal function (≥60)', badge: 'Normal (≥60)', cls: 'badge-normal' };
       }
+    },
+    body_fat: {
+      name: 'Body Fat Percentage (DEXA)',
+      short: 'Body Fat %',
+      unit: '%',
+      icon: '🧬',
+      role: 'Captured via Visualize TrueDepth 3D scan; checked for incretin & metabolic trials',
+      format: (val) => `${val.toFixed(1)}%`,
+      status: (val) => {
+        if (val == null) return { text: 'Not scanned yet · Use DEXA Scan tab', badge: 'Not scanned', cls: 'badge-muted' };
+        if (val >= 27) return { text: 'Metabolic inclusion cutoff (≥27%)', badge: 'DEXA ≥ 27%', cls: 'badge-warning' };
+        return { text: 'Standard body fat range (<27%)', badge: 'Normal (<27%)', cls: 'badge-normal' };
+      }
+    },
+    visceral_fat: {
+      name: 'Visceral Adipose Tissue (VAT)',
+      short: 'Visceral Fat',
+      unit: 'cm²',
+      icon: '📊',
+      role: 'DEXA L4-L5 cross-sectional area; correlates with hepatic steatosis & cardiometabolic risk (≥100 cm²)',
+      format: (val) => `${val.toFixed(1)} cm²`,
+      status: (val) => {
+        if (val == null) return { text: 'Not scanned yet · Use DEXA Scan tab', badge: 'Not scanned', cls: 'badge-muted' };
+        if (val >= 100) return { text: 'High central adiposity (≥100 cm²)', badge: 'Elevated (≥100)', cls: 'badge-warning' };
+        return { text: 'Normal visceral range (<100 cm²)', badge: 'Normal (<100)', cls: 'badge-normal' };
+      }
     }
   };
 
@@ -317,9 +343,12 @@
         const icon = node('span', '🩺', 'topic-icon');
         const textWrap = node('div', undefined, 'topic-info');
         textWrap.append(node('strong', c.name, 'topic-name'));
-        const detail = c.source === 'labs' 
-          ? 'Suggested from local vitals reading (e.g. Systolic BP ≥ 130 mmHg)' 
-          : 'From documented conditions in your EHR record';
+        let detail = 'From documented conditions in your EHR record';
+        if (c.source === 'labs') {
+          detail = 'Suggested from local vitals reading (e.g. Systolic BP ≥ 130 mmHg)';
+        } else if (c.source === 'dexa' || c.source === 'dexa_scan') {
+          detail = 'Discovered via Visualize TrueDepth 3D DEXA scan (Elevated VAT ≥ 95 cm² or Body Fat ≥ 27%)';
+        }
         textWrap.append(node('span', detail, 'topic-source'));
         chip.append(icon, textWrap);
         topicsGrid.append(chip);
@@ -338,11 +367,15 @@
     labsSection.append(labsHeader);
 
     const labsGrid = node('div', undefined, 'profile-labs-grid');
-    const labKeys = ['systolic', 'bmi', 'a1c', 'egfr'];
+    const labKeys = ['systolic', 'bmi', 'a1c', 'egfr', 'body_fat', 'visceral_fat'];
 
     labKeys.forEach(key => {
       const cfg = LAB_META[key];
-      const val = p.labs ? p.labs[key] : null;
+      let val = p.labs ? p.labs[key] : null;
+      if (val == null && p.dexa && p.dexa.measurements) {
+        if (key === 'body_fat') val = p.dexa.measurements.bodyFatPercent;
+        if (key === 'visceral_fat') val = p.dexa.measurements.visceralFat?.areaCm2;
+      }
       const card = node('div', undefined, `profile-lab-card ${val != null ? 'is-recorded' : 'is-empty'}`);
 
       const top = node('div', undefined, 'lab-card-top');

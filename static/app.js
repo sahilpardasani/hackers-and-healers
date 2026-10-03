@@ -81,7 +81,7 @@
       activateTab(tabs[nextIndex].dataset.tabTarget, { focus: true, scroll: false });
     });
   });
-  if (['#trials', '#health'].includes(window.location.hash)) activateTab(window.location.hash.slice(1), { scroll: false });
+  if (['#trials', '#health', '#prescriptions', '#dexa'].includes(window.location.hash)) activateTab(window.location.hash.slice(1), { scroll: false });
 
   const logKey = 'patient-agency.logs.v1';
   const logsForToday = () => storage.read(logKey, {})[today()] || {};

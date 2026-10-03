@@ -204,6 +204,8 @@ LAB_PATTERNS = {
     "a1c": (re.compile(r"\bhb\s*a1c\b|\ba1c\b|ha?emoglobin a1c|glycated ha?emoglobin", re.I), "A1c"),
     "bmi": (re.compile(r"\bBMI\b|body mass index", re.I), "BMI"),
     "systolic": (re.compile(r"\bsystolic\b|\bSBP\b", re.I), "systolic blood pressure"),
+    "body_fat": (re.compile(r"\bbody\s*fat\b|\bpercent(?:age)?\s*fat\b|\bBF%\b", re.I), "body fat percentage"),
+    "visceral_fat": (re.compile(r"\bvisceral\s*(?:fat|adipose|adiposity)\b|\bVAT\b", re.I), "visceral adipose tissue"),
 }
 _PHRASES = [
     (r"≥|=>|>/=|greater than or equal to|more than or equal to|at least|equal to or greater than", ">="),
@@ -299,6 +301,12 @@ def assess_criterion(text: str, profile: dict) -> dict:
             if not bounds:
                 continue
             value = profile.get("labs", {}).get(metric)
+            if value is None and metric in ("body_fat", "visceral_fat"):
+                dexa_m = (profile.get("dexa") or {}).get("measurements", {})
+                if metric == "body_fat":
+                    value = dexa_m.get("bodyFatPercent")
+                elif metric == "visceral_fat":
+                    value = (dexa_m.get("visceralFat") or {}).get("areaCm2")
             if value is None:
                 return {"text": text, "result": "unknown", "basis": f"No {label} result on file."}
             basis = f"Your latest {label} is {value:g}."
@@ -567,7 +575,24 @@ def stored_resources(source="connected") -> list[dict]:
 
 def stored_profile(source="connected") -> dict | None:
     resources = stored_resources(source)
-    return patient_profile(resources) if resources else None
+    if not resources:
+        return None
+    prof = patient_profile(resources)
+    try:
+        latest_dexa = storage.get_latest_dexa_scan()
+        if latest_dexa:
+            prof["dexa"] = latest_dexa
+            m = latest_dexa.get("measurements", {})
+            vat = (m.get("visceralFat") or {}).get("areaCm2", 0)
+            bf = m.get("bodyFatPercent", 0)
+            if (vat >= 95 or bf >= 27) and not any("Adiposity" in c.get("name", "") or "Visceral" in c.get("name", "") for c in prof.get("conditions", [])):
+                prof["conditions"].append({
+                    "name": "Visceral Adiposity & Elevated Body Fat (DEXA)",
+                    "source": "dexa",
+                })
+    except Exception:
+        pass
+    return prof
 
 
 # --- HTTP routes ------------------------------------------------------------------
