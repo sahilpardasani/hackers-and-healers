@@ -21,6 +21,7 @@ load_dotenv()
 
 import endpoint_directory
 import clinicaltrial
+import health_assistant
 import storage
 from sample_data import SAMPLE_NAMESPACE, sample_resources
 from ckm import summarize
@@ -43,6 +44,7 @@ MAX_PAGES_PER_QUERY = 100
 
 app = Flask(__name__)
 app.register_blueprint(clinicaltrial.trials)
+app.register_blueprint(health_assistant.health)
 app.secret_key = os.getenv("FLASK_SECRET_KEY") or secrets.token_hex(32)
 app.config.update(SESSION_COOKIE_HTTPONLY=True, SESSION_COOKIE_SAMESITE="Lax",
                   SESSION_COOKIE_SECURE=urlparse(REDIRECT_URI).scheme == "https")

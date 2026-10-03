@@ -7,5 +7,8 @@ export default defineConfig({
   base: './',
   // Development-only loopback proxy; secure:false accepts this app's self-signed
   // local certificate, never a remote Epic or ClinicalTrials.gov certificate.
-  server: { port: 5173, proxy: { '/api/trials': { target: 'https://127.0.0.1:3000', secure: false } } }
+  server: { port: 5173, proxy: {
+    '/api/trials': { target: 'https://127.0.0.1:3000', secure: false },
+    '/api/health': { target: 'https://127.0.0.1:3000', secure: false }
+  } }
 });

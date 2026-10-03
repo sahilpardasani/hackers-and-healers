@@ -15,3 +15,8 @@ body:has(.demo-preview:not([hidden]))::before{content:"";position:fixed;inset:0;
 .trial-card summary { cursor: pointer; padding: 12px 0; }
 .trial-link { display: inline-block; margin-top: 20px; }
 @media(max-width:700px) { .trial-location { grid-template-columns: 1fr; } }
+.health-context { white-space: pre-wrap; overflow-wrap: anywhere; max-height: 350px; overflow: auto; font-size: 13px; }
+.health-answer { white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.7; }
+#health-question { width: 100%; box-sizing: border-box; padding: 14px; font: inherit; border: 1px solid #d8dbe5; border-radius: 12px; }
+.tabbar { overflow-x: auto; }
+.tabbar .tab { flex-shrink: 0; }

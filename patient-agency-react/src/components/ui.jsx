@@ -13,7 +13,8 @@ export const TABS = [
   { id: 'progress', label: 'Progress', ic: '📈' },
   { id: 'data', label: 'My data', ic: '🔗' },
   { id: 'visit', label: 'Visit prep', ic: '🩺' },
-  { id: 'trials', label: 'Trials', ic: '🔬' }
+  { id: 'trials', label: 'Trials', ic: '🔬' },
+  { id: 'health', label: 'Ask health', ic: '💬' }
 ];
 
 export function BottomNav({ tab, onChange }) {

@@ -1,5 +1,10 @@
 // Demo-only explainer shown next to the phone frame on desktop.
 const CONTENT = {
+  health: {
+    title: 'Ask about your health',
+    data: ['Current record → previewed minimal profile', 'NVIDIA GLM → plain-language explanations after consent', 'ClinicalTrials.gov → verified study candidates, never confirmed eligibility'],
+    why: 'Help patients prepare questions for their clinicians. This optional feature processes sensitive context outside the device; review it before sending.'
+  },
   trials: {
     title: 'Clinical trials: explore research',
     data: ['Current record → minimal local matching profile', 'ClinicalTrials.gov API v2 → public recruiting studies', 'Local pre-screen → reasons and questions for the study team'],

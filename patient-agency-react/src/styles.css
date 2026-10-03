@@ -136,3 +136,5 @@ pre.summary{white-space:pre-wrap;font-family:inherit;font-size:12.5px;line-heigh
 .mic:disabled{opacity:.4;cursor:not-allowed}
 .mic.live{background:var(--red);animation:pulse 1.2s infinite}
 @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(185,28,28,.5)}70%{box-shadow:0 0 0 14px rgba(185,28,28,0)}100%{box-shadow:0 0 0 0 rgba(185,28,28,0)}}
+.nav { overflow-x: auto; justify-content: flex-start; gap: 3px; }
+.nav button { flex: 0 0 62px; }
