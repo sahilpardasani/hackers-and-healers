@@ -15,7 +15,7 @@ from urllib.parse import quote, urlencode, urlparse
 import requests
 from apscheduler.schedulers.background import BackgroundScheduler
 from dotenv import load_dotenv
-from flask import Flask, abort, redirect, render_template_string, request, session, url_for
+from flask import Flask, abort, redirect, render_template, render_template_string, request, session, url_for
 
 load_dotenv()
 
@@ -73,7 +73,7 @@ h1{font-size:2rem}.muted{opacity:.72}.card{border:1px solid #8885;border-radius:
 </div><p class="muted">These summaries describe the imported records; they are not clinical advice.</p>
 {% if metrics.a1c_trend %}<h3>A1c trend</h3><div class="rows"><table><thead><tr><th>Date</th><th>Result</th><th>Test</th></tr></thead><tbody>{% for row in metrics.a1c_trend|reverse %}<tr><td>{{ row.date or 'Date unavailable' }}</td><td>{{ row.value }} {{ row.unit }}</td><td>{{ row.display }}</td></tr>{% endfor %}</tbody></table></div>{% endif %}</section>
 <section class="card"><h2>Synced records</h2>{% if counts %}<div class="rows"><table><thead><tr><th>FHIR type</th><th>Records</th></tr></thead><tbody>{% for kind,count in counts.items() %}<tr><td>{{ kind }}</td><td>{{ count }}</td></tr>{% endfor %}</tbody></table></div>{% else %}<p>No records synced yet.</p>{% endif %}</section>{% endif %}
-<p class="muted">This demo runs on this computer at <code>127.0.0.1</code>. Stop it to stop scheduled syncs.</p></body></html>"""
+<p class="muted">This demo runs on this computer at <code>127.0.0.1</code>. Stop it to stop scheduled syncs.</p><footer class="muted"><a href="{{ url_for('terms') }}">Terms and Conditions (Draft)</a></footer></body></html>"""
 
 
 def _sid() -> str:
@@ -223,6 +223,12 @@ def index():
         metric_text=lambda item: f"{item['value']:g} {item['unit']}" if item else "No result",
         pressure_text=lambda item: f"{item['systolic_average'] or '—'}/{item['diastolic_average'] or '—'} mmHg",
     )
+
+
+@app.get("/terms")
+def terms():
+    """Show draft terms for the local prototype; not yet legally operative."""
+    return render_template("terms.html")
 
 
 @app.post("/connect")
