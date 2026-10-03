@@ -161,6 +161,8 @@ def fetch_bundle(connection: dict, resource_type: str, params: dict) -> list[dic
         if next_parts.scheme != "https" or next_parts.netloc != base_parts.netloc:
             raise ValueError("FHIR pagination link did not remain on the approved HTTPS host.")
         url = next_url
+    else:
+        raise ValueError("FHIR result exceeded the pagination safety limit; sync cursor was not advanced.")
     return collected
 
 
