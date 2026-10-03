@@ -48,7 +48,7 @@ def server_options(redirect_uri: str, cert_dir: Path | None = None, use_ssl: boo
     cert_path, key_path = directory / "localhost.crt", directory / "localhost.key"
     if not cert_path.exists() and not key_path.exists():
         key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
-        subject = x509.Name([x509.NameAttribute(NameOID.COMMON_NAME, "Hackers & Healers local development")])
+        subject = x509.Name([x509.NameAttribute(NameOID.COMMON_NAME, "Nudge Lab local development")])
         now = datetime.now(timezone.utc)
         cert = (
             x509.CertificateBuilder().subject_name(subject).issuer_name(subject)

@@ -47,7 +47,7 @@ SYNC_HOUR = int(os.getenv("SYNC_HOUR", "3"))
 FHIR_TIMEOUT = (5, 45)
 MAX_PAGES_PER_QUERY = 100
 
-app = FastAPI(title="Hackers & Healers")
+app = FastAPI(title="Nudge Lab")
 USE_SSL = os.getenv("USE_SSL", "false").lower() in {"1", "true", "yes"}
 
 app.add_middleware(
@@ -84,6 +84,7 @@ def custom_url_for(endpoint: str, **values):
         "sync_now": "/sync",
         "disconnect": "/disconnect",
         "terms": "/terms",
+        "company": "/company",
     }
     url = endpoint_map.get(endpoint, f"/{endpoint}")
     if values:
@@ -537,6 +538,171 @@ def _render_dashboard(request: Request, connection, last_sync, sample_mode=False
 def terms(request: Request):
     """Show draft terms for the local prototype; not yet legally operative."""
     return templates.TemplateResponse(request=request, name="terms.html", context={})
+
+
+def _get_company_trial_data(trial_param: str = "pfizer-drug", company_param: str = None) -> dict:
+    sponsor = company_param or ("Pfizer Inc." if "pfizer" in (trial_param or "").lower() else "Pfizer Inc.")
+    
+    return {
+        "trial_id": trial_param or "pfizer-drug",
+        "nct_id": "NCT05579977" if "pfizer" in (trial_param or "").lower() else (trial_param.upper() if (trial_param or "").upper().startswith("NCT") else "NCT05579977"),
+        "protocol_id": "B7981015",
+        "sponsor": sponsor,
+        "drug_name": "Danuglipron (PF-06882961)",
+        "drug_class": "Oral GLP-1 Receptor Agonist",
+        "title": "Phase 3 Study of Oral GLP-1 Receptor Agonist Danuglipron (PF-06882961) in Adults with Type 2 Diabetes and Cardiovascular Risk",
+        "phase": "Phase 3",
+        "status": "Active, Pre-Screening Cohort",
+        "condition": "Type 2 Diabetes Mellitus & Cardiometabolic Disease",
+        "therapeutic_area": "Internal Medicine / Cardiometabolic",
+        "summary": "This multi-center, randomized, double-blind phase 3 trial evaluates the glycemic efficacy, safety, and weight reduction of oral danuglipron compared to placebo and active comparator in patients with inadequate glycemic control on stable metformin monotherapy.",
+        "sites_count": 142,
+        "primary_completion": "December 2027",
+        "inclusion_criteria": [
+            "Age 18 to 75 years inclusive at the time of pre-screening",
+            "Documented diagnosis of Type 2 Diabetes Mellitus ≥ 180 days",
+            "Hemoglobin A1c (HbA1c) 7.0% to 10.5% (or 5.7%–7.0% in pre-diabetes protocol extension)",
+            "Body Mass Index (BMI) ≥ 25.0 kg/m² and ≤ 45.0 kg/m²",
+            "Stable dose of Metformin (≥ 1,000 mg/day) for at least 90 days prior to screening"
+        ],
+        "exclusion_criteria": [
+            "Estimated Glomerular Filtration Rate (eGFR) < 45 mL/min/1.73m² (CKD-EPI)",
+            "History of pancreatitis or personal/family history of Medullary Thyroid Carcinoma",
+            "Use of any other GLP-1 receptor agonist or dual GIP/GLP-1 agonist within 90 days",
+            "Recent acute coronary syndrome or stroke within previous 6 months",
+            "Severe proliferative diabetic retinopathy or macular edema"
+        ],
+        "candidates": [
+            {
+                "id": "NL-CAN-8842",
+                "match_score": 98,
+                "fit_verdict": "STRONG_MATCH",
+                "age_bracket": "36–40 yo Female",
+                "location": "San Francisco Bay Area, CA (11 miles from Site #042 - UCSF)",
+                "expressed_interest_date": "Oct 2, 2026",
+                "consent_hash": "0x7e8f...39a1",
+                "verified_biomarkers": [
+                    {"name": "Hemoglobin A1c", "value": "6.2%", "status": "verified", "source": "Epic MyChart (Sutter Health)", "date": "Sep 18, 2026", "fits_criterion": True},
+                    {"name": "Body Mass Index", "value": "27.4 kg/m²", "status": "verified", "source": "Clinical Encounter Vitals", "date": "Sep 18, 2026", "fits_criterion": True},
+                    {"name": "eGFR (CKD-EPI)", "value": "94 mL/min/1.73m²", "status": "verified", "source": "Labcorp R4 FHIR Bundle", "date": "Sep 18, 2026", "fits_criterion": True},
+                    {"name": "Active Metformin", "value": "1,000 mg BID (Oral)", "status": "verified", "source": "Active Rx Reconciliation", "date": "Sep 18, 2026", "fits_criterion": True},
+                    {"name": "Blood Pressure", "value": "120/78 mmHg", "status": "verified", "source": "In-clinic measurement", "date": "Sep 18, 2026", "fits_criterion": True},
+                    {"name": "No Prior GLP-1", "value": "Zero GLP-1 dispensing in 24 months", "status": "verified", "source": "State PMP & FHIR Rx", "date": "Verified", "fits_criterion": True}
+                ],
+                "missing_data": [
+                    {
+                        "biomarker": "Fasting C-Peptide (<90 days)",
+                        "importance": "High Priority",
+                        "why_needed": "Protocol Section 4.2 requires baseline endogenous insulin secretion confirmation (>0.5 ng/mL).",
+                        "acquisition_cost": 350,
+                        "turnaround": "48 hours via Quest/Labcorp requisition",
+                        "status": "pending_sponsor_funding"
+                    },
+                    {
+                        "biomarker": "14-Day Continuous Glucose Monitor (CGM) Stream",
+                        "importance": "Exploratory Endpoint",
+                        "why_needed": "Secondary endpoint measuring time-in-range (TIR) glycemic variability.",
+                        "acquisition_cost": 500,
+                        "turnaround": "14 days via Dexcom/Abbott patient sync",
+                        "status": "pending_sponsor_funding"
+                    }
+                ]
+            },
+            {
+                "id": "NL-CAN-6190",
+                "match_score": 95,
+                "fit_verdict": "STRONG_MATCH",
+                "age_bracket": "52–56 yo Male",
+                "location": "Oakland / East Bay, CA (16 miles from Site #042 - UCSF)",
+                "expressed_interest_date": "Sep 29, 2026",
+                "consent_hash": "0x3a4c...f012",
+                "verified_biomarkers": [
+                    {"name": "Hemoglobin A1c", "value": "7.8%", "status": "verified", "source": "Quest Diagnostics FHIR", "date": "Sep 12, 2026", "fits_criterion": True},
+                    {"name": "Body Mass Index", "value": "31.2 kg/m²", "status": "verified", "source": "Clinical Encounter Vitals", "date": "Sep 12, 2026", "fits_criterion": True},
+                    {"name": "eGFR (CKD-EPI)", "value": "78 mL/min/1.73m²", "status": "verified", "source": "Comprehensive Metabolic Panel", "date": "Sep 12, 2026", "fits_criterion": True},
+                    {"name": "Active Metformin", "value": "850 mg BID", "status": "verified", "source": "Active Rx Reconciliation", "date": "Sep 12, 2026", "fits_criterion": True},
+                    {"name": "No Prior GLP-1", "value": "Confirmed unexposed", "status": "verified", "source": "FHIR MedicationStatement", "date": "Verified", "fits_criterion": True}
+                ],
+                "missing_data": [
+                    {
+                        "biomarker": "Baseline 12-Lead ECG Report",
+                        "importance": "Safety Screening",
+                        "why_needed": "Protocol Section 5.1 requires QTc evaluation (<450 ms in males) prior to first dose.",
+                        "acquisition_cost": 400,
+                        "turnaround": "3 business days via local in-network cardiology suite",
+                        "status": "pending_sponsor_funding"
+                    }
+                ]
+            },
+            {
+                "id": "NL-CAN-3304",
+                "match_score": 91,
+                "fit_verdict": "ELIGIBLE_REVIEW",
+                "age_bracket": "44–48 yo Female",
+                "location": "San Jose / South Bay, CA (22 miles from Site #088 - Stanford)",
+                "expressed_interest_date": "Oct 1, 2026",
+                "consent_hash": "0x91d2...b45e",
+                "verified_biomarkers": [
+                    {"name": "Hemoglobin A1c", "value": "7.1%", "status": "verified", "source": "Stanford Health Care MyChart", "date": "Aug 24, 2026", "fits_criterion": True},
+                    {"name": "Body Mass Index", "value": "29.1 kg/m²", "status": "verified", "source": "Annual Physical", "date": "Aug 24, 2026", "fits_criterion": True},
+                    {"name": "eGFR (CKD-EPI)", "value": "82 mL/min/1.73m²", "status": "verified", "source": "Renal Panel", "date": "Aug 24, 2026", "fits_criterion": True},
+                    {"name": "Active Metformin", "value": "1,000 mg QD", "status": "verified", "source": "Electronic Prescription Record", "date": "Aug 24, 2026", "fits_criterion": True}
+                ],
+                "missing_data": [
+                    {
+                        "biomarker": "Dilated Fundoscopic Retinal Exam (<12 months)",
+                        "importance": "Protocol Exclusion Rule",
+                        "why_needed": "Excludes advanced proliferative diabetic retinopathy required by FDA guidance.",
+                        "acquisition_cost": 300,
+                        "turnaround": "5 business days via optometrist referral partner",
+                        "status": "pending_sponsor_funding"
+                    },
+                    {
+                        "biomarker": "Fasting Lipid Panel & Triglycerides",
+                        "importance": "Safety Screening",
+                        "why_needed": "Requires fasting triglycerides < 500 mg/dL to rule out acute pancreatitis risk.",
+                        "acquisition_cost": 250,
+                        "turnaround": "24 hours via Quest/Labcorp",
+                        "status": "pending_sponsor_funding"
+                    }
+                ]
+            }
+        ]
+    }
+
+
+@app.get("/company", response_class=HTMLResponse)
+def company_portal(request: Request, trial: str = "pfizer-drug", company: str = None):
+    """Pharma sponsor data room displaying anonymized pre-screened candidate profiles and data acquisition opportunities."""
+    trial_data = _get_company_trial_data(trial_param=trial, company_param=company)
+    return templates.TemplateResponse(
+        request=request,
+        name="company.html",
+        context={"trial": trial_data}
+    )
+
+
+@app.post("/api/company/acquire-data")
+async def acquire_data(request: Request):
+    """Authorize funding for a missing biomarker lab requisition directly to a candidate patient."""
+    try:
+        body = await request.json()
+    except Exception:
+        body = {}
+    patient_id = body.get("patient_id", "NL-CAN-UNKNOWN")
+    biomarker = body.get("biomarker", "Requested Lab Panel")
+    amount = body.get("amount", 350)
+    trial_id = body.get("trial_id", "pfizer-drug")
+    
+    return JSONResponse({
+        "success": True,
+        "trial_id": trial_id,
+        "patient_id": patient_id,
+        "biomarker": biomarker,
+        "escrow_amount": amount,
+        "status": "escrow_funded",
+        "message": f"Escrow funded with ${amount}. A secure digital requisition for {biomarker} has been dispatched to {patient_id}'s Nudge Lab vault."
+    })
 
 
 @app.post("/connect")

@@ -1,5 +1,6 @@
 <!doctype html>
 <html lang="en">
+
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -7,27 +8,38 @@
   <title>Patient Agency</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
 </head>
+
 <body data-sample-mode="{{ 'true' if sample_mode else 'false' }}">
   <a class="skip-link" href="#main-content">Skip to main content</a>
   <header class="topbar">
     <a class="brand" href="{{ url_for('app') }}" aria-label="Patient Agency home">
-      <span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 48 48" role="img"><path d="M24 38V17"/><path d="M24 22C15 22 9 17 8 9c8 0 15 3 16 12"/><path d="M24 27c2-8 8-12 17-12-1 8-7 13-17 12"/><path d="M14 39h20"/></svg></span>
+      <span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 48 48" role="img">
+          <path d="M24 38V17" />
+          <path d="M24 22C15 22 9 17 8 9c8 0 15 3 16 12" />
+          <path d="M24 27c2-8 8-12 17-12-1 8-7 13-17 12" />
+          <path d="M14 39h20" />
+        </svg></span>
       <span><strong>Patient Agency</strong><small>your postpartum health companion</small></span>
     </a>
     <div style="display: flex; align-items: center; gap: 1rem;">
-      <a href="{{ url_for('index') }}" style="color: #64748b; font-size: 0.9rem; text-decoration: none; font-weight: 500;">&larr; Commercial Site</a>
+      <a href="{{ url_for('index') }}"
+        style="color: #64748b; font-size: 0.9rem; text-decoration: none; font-weight: 500;">&larr; Commercial Site</a>
       {% if connection %}
-        <span class="topbar-status"><span class="status-dot"></span>Local &amp; private</span>
-        <form method="post" action="{{ url_for('disconnect') }}" style="display: inline; margin: 0;">
-          <button type="submit" class="button button-danger" style="padding: 0.35rem 0.75rem; font-size: 0.8rem; border-radius: 6px; cursor: pointer;">Disconnect</button>
-        </form>
+      <span class="topbar-status"><span class="status-dot"></span>Local &amp; private</span>
+      <form method="post" action="{{ url_for('disconnect') }}" style="display: inline; margin: 0;">
+        <button type="submit" class="button button-danger"
+          style="padding: 0.35rem 0.75rem; font-size: 0.8rem; border-radius: 6px; cursor: pointer;">Disconnect</button>
+      </form>
       {% endif %}
     </div>
   </header>
 
   <main id="main-content" class="shell">
-    {% if sample_mode %}<div class="notice notice-warning" role="status"><span>Sample data · Maya is fictional. These records came from the bundled demo JSON, not Epic. <a href="{{ url_for('app') }}">Return to MyChart connection</a> · <a href="{{ url_for('sample_json') }}">View sample JSON</a></span></div>{% endif %}
-    {% if error %}<div class="notice notice-warning" role="alert"><span class="notice-icon">!</span><span>{{ error }}</span></div>{% endif %}
+    {% if sample_mode %}<div class="notice notice-warning" role="status"><span>Sample data · Maya is fictional. These
+        records came from the bundled demo JSON, not Epic. <a href="{{ url_for('app') }}">Return to MyChart
+          connection</a> · <a href="{{ url_for('sample_json') }}">View sample JSON</a></span></div>{% endif %}
+    {% if error %}<div class="notice notice-warning" role="alert"><span class="notice-icon">!</span><span>{{ error
+        }}</span></div>{% endif %}
 
     {% if not connection %}
     <section class="welcome-hero">
@@ -37,8 +49,14 @@
     </section>
 
     <section class="card consent-card">
-      <div class="section-heading"><div><p class="eyebrow">Start here</p><h2>What Patient Agency uses</h2></div><span class="soft-icon">✦</span></div>
-      <p>Your health record — weight, BMI, labs, conditions, and medications — is read-only through SMART on FHIR. Check-ins you add stay on this device. You can disconnect or delete your local data at any time.</p>
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">Start here</p>
+          <h2>What Patient Agency uses</h2>
+        </div><span class="soft-icon">✦</span>
+      </div>
+      <p>Your health record — weight, BMI, labs, conditions, and medications — is read-only through SMART on FHIR.
+        Check-ins you add stay on this device. You can disconnect or delete your local data at any time.</p>
       <label class="consent-row" for="consent">
         <input id="consent" name="consent" type="checkbox" form="connect-form" value="yes">
         <span>I understand Patient Agency doesn’t provide medical advice.</span>
@@ -46,44 +64,80 @@
     </section>
 
     <section class="connect-section">
-      <div class="section-heading"><div><p class="eyebrow">One secure connection</p><h2>Connect your health record</h2></div><span class="step-chip">1 of 2</span></div>
-      <p class="muted">Choose a portal. You’ll sign in there and approve access; Patient Agency never sees your MyChart password.</p>
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">One secure connection</p>
+          <h2>Connect your health record</h2>
+        </div><span class="step-chip">1 of 2</span>
+      </div>
+      <p class="muted">Choose a portal. You’ll sign in there and approve access; Patient Agency never sees your MyChart
+        password.</p>
       {% if not client_ready %}
-      <div class="notice notice-warning">Add your Epic non-production Client ID, Sandbox Client Secret, and local encryption key before connecting.</div>
+      <div class="notice notice-warning">Add your Epic non-production Client ID, Sandbox Client Secret, and local
+        encryption key before connecting.</div>
       {% else %}
       <form id="connect-form" class="connect-form" method="post" action="{{ url_for('connect') }}">
         <label for="endpoint">Health system</label>
-        <select id="endpoint" name="endpoint" required>{% for item in endpoints %}<option value="{{ item.url }}">{{ item.name }}</option>{% endfor %}</select>
-        <button id="connect-button" class="button button-primary button-large" type="submit" disabled><span aria-hidden="true">↗</span> Connect my health record</button>
+        <select id="endpoint" name="endpoint" required>{% for item in endpoints %}<option value="{{ item.url }}">{{
+            item.name }}</option>{% endfor %}</select>
+        <button id="connect-button" class="button button-primary button-large" type="submit" disabled><span
+            aria-hidden="true">↗</span> Connect my health record</button>
       </form>
       {% endif %}
       <p class="fine-print"><span class="lock">⌑</span> Sandbox and synthetic data only for this prototype.</p>
     </section>
 
     <section class="demo-card">
-      <div><h2>Explore the full dashboard</h2><p class="muted">Load Maya’s fictional FHIR records into the local database. No MyChart login needed.</p><form method="post" action="{{ url_for('load_sample') }}"><button class="button button-primary" type="submit">Load sample records</button></form></div>
+      <div>
+        <h2>Explore the full dashboard</h2>
+        <p class="muted">Load Maya’s fictional FHIR records into the local database. No MyChart login needed.</p>
+        <form method="post" action="{{ url_for('load_sample') }}"><button class="button button-primary"
+            type="submit">Load sample records</button></form>
+      </div>
     </section>
 
     <section class="demo-card">
-      <div><p class="eyebrow">Want to explore first?</p><h2>Preview the experience</h2><p class="muted">See the daily flow with sample data. Nothing is sent anywhere.</p></div>
+      <div>
+        <p class="eyebrow">Want to explore first?</p>
+        <h2>Preview the experience</h2>
+        <p class="muted">See the daily flow with sample data. Nothing is sent anywhere.</p>
+      </div>
       <button class="button button-secondary" type="button" data-demo-preview>Open demo preview</button>
     </section>
 
-    <div class="demo-preview" data-demo-panel role="dialog" aria-modal="true" aria-labelledby="demo-title" tabindex="-1" hidden>
-      <div class="demo-preview-top"><span class="demo-badge">SYNTHETIC DEMO</span><button type="button" class="icon-button" data-close-demo aria-label="Close demo preview">×</button></div>
-      <h2 id="demo-title">Today, Maya</h2><p class="muted">This is a design preview. Connect your own sandbox record to replace it with authorized data.</p>
-      <div class="preview-metrics"><div><span>Weight</span><strong>183.6 lb</strong></div><div><span>Week</span><strong>8</strong></div><div><span>Daily actions</span><strong>2 / 4</strong></div></div>
-      <div class="alert-card alert-success"><span>✓</span><div><strong>5% milestone in sight</strong><p>Your trend is moving in the direction you chose.</p></div></div>
-      <div class="preview-actions"><span>Today’s actions</span><button type="button">Log weight</button><button type="button">Add protein</button></div>
+    <div class="demo-preview" data-demo-panel role="dialog" aria-modal="true" aria-labelledby="demo-title" tabindex="-1"
+      hidden>
+      <div class="demo-preview-top"><span class="demo-badge">SYNTHETIC DEMO</span><button type="button"
+          class="icon-button" data-close-demo aria-label="Close demo preview">×</button></div>
+      <h2 id="demo-title">Today, Maya</h2>
+      <p class="muted">This is a design preview. Connect your own sandbox record to replace it with authorized data.</p>
+      <div class="preview-metrics">
+        <div><span>Weight</span><strong>183.6 lb</strong></div>
+        <div><span>Week</span><strong>8</strong></div>
+        <div><span>Daily actions</span><strong>2 / 4</strong></div>
+      </div>
+      <div class="alert-card alert-success"><span>✓</span>
+        <div><strong>5% milestone in sight</strong>
+          <p>Your trend is moving in the direction you chose.</p>
+        </div>
+      </div>
+      <div class="preview-actions"><span>Today’s actions</span><button type="button">Log weight</button><button
+          type="button">Add protein</button></div>
     </div>
 
     {% else %}
     <section class="app-intro">
-      <div><p class="eyebrow">Today</p><h1>Welcome back, <span id="patient-name-display">{{ patient.name or 'there' }}</span>.</h1><p class="muted">Small actions, grounded in your own health record.</p></div>
-      <div class="source-pill"><span class="status-dot"></span><span>{{ connection.display_name or 'Connected health record' }}</span></div>
+      <div>
+        <p class="eyebrow">Today</p>
+        <h1>Welcome back, <span id="patient-name-display">{{ patient.name or 'there' }}</span>.</h1>
+        <p class="muted">Small actions, grounded in your own health record.</p>
+      </div>
+      <div class="source-pill"><span class="status-dot"></span><span>{{ connection.display_name or 'Connected health
+          record' }}</span></div>
     </section>
 
-    <div id="sync-tracker" class="sync-tracker-card card" {% if not sync_active and not (counts.values()|sum == 0 and not sample_mode) %}hidden{% endif %} aria-live="polite">
+    <div id="sync-tracker" class="sync-tracker-card card" {% if not sync_active and not (counts.values()|sum==0 and not
+      sample_mode) %}hidden{% endif %} aria-live="polite">
       <div class="sync-tracker-content">
         <div class="sync-spinner-wrap">
           <div class="sync-spinner"></div>
@@ -106,108 +160,376 @@
     </div>
 
     <nav class="tabbar" aria-label="Patient Agency sections" role="tablist">
-      <button id="tab-today" class="tab is-active" role="tab" aria-controls="panel-today" aria-selected="true" tabindex="0" data-tab-target="today">Today</button>
-      <button id="tab-journey" class="tab" role="tab" aria-controls="panel-journey" aria-selected="false" tabindex="-1" data-tab-target="journey">Journey</button>
-      <button id="tab-progress" class="tab" role="tab" aria-controls="panel-progress" aria-selected="false" tabindex="-1" data-tab-target="progress">Progress</button>
-      <button id="tab-visit" class="tab" role="tab" aria-controls="panel-visit" aria-selected="false" tabindex="-1" data-tab-target="visit">Visit prep</button>
-      <button id="tab-trials" class="tab" role="tab" aria-controls="panel-trials" aria-selected="false" tabindex="-1" data-tab-target="trials">Clinical trials</button>
-      <button id="tab-health" class="tab" role="tab" aria-controls="panel-health" aria-selected="false" tabindex="-1" data-tab-target="health">Ask about your health</button>
-      <button id="tab-my-data" class="tab" role="tab" aria-controls="panel-my-data" aria-selected="false" tabindex="-1" data-tab-target="my-data">My data</button>
+      <button id="tab-today" class="tab is-active" role="tab" aria-controls="panel-today" aria-selected="true"
+        tabindex="0" data-tab-target="today">Today</button>
+      <button id="tab-journey" class="tab" role="tab" aria-controls="panel-journey" aria-selected="false" tabindex="-1"
+        data-tab-target="journey">Journey</button>
+      <button id="tab-progress" class="tab" role="tab" aria-controls="panel-progress" aria-selected="false"
+        tabindex="-1" data-tab-target="progress">Progress</button>
+      <button id="tab-visit" class="tab" role="tab" aria-controls="panel-visit" aria-selected="false" tabindex="-1"
+        data-tab-target="visit">Visit prep</button>
+      <button id="tab-trials" class="tab" role="tab" aria-controls="panel-trials" aria-selected="false" tabindex="-1"
+        data-tab-target="trials">Clinical trials</button>
+      <button id="tab-health" class="tab" role="tab" aria-controls="panel-health" aria-selected="false" tabindex="-1"
+        data-tab-target="health">Ask about your health</button>
+      <button id="tab-my-data" class="tab" role="tab" aria-controls="panel-my-data" aria-selected="false" tabindex="-1"
+        data-tab-target="my-data">My data</button>
     </nav>
 
-    <section id="panel-today" class="tab-panel is-active" role="tabpanel" aria-labelledby="tab-today" tabindex="0" data-tab-panel="today">
+    <section id="panel-today" class="tab-panel is-active" role="tabpanel" aria-labelledby="tab-today" tabindex="0"
+      data-tab-panel="today">
       <div class="today-hero card-gradient">
-        <div><p class="eyebrow">Your snapshot</p><h2>One day at a time.</h2><p>Use your record as a starting point, then add what only you know.</p></div>
+        <div>
+          <p class="eyebrow">Your snapshot</p>
+          <h2>One day at a time.</h2>
+          <p>Use your record as a starting point, then add what only you know.</p>
+        </div>
         <div class="snapshot-ring"><strong>{{ metrics.a1c_trend|length }}</strong><span>A1c<br>results</span></div>
       </div>
       <div class="metric-grid">
-        <div class="metric-card"><span>Latest eGFR</span><strong>{% if metrics.latest_egfr %}{{ metrics.latest_egfr.value|round(1) }} {{ metrics.latest_egfr.unit }}{% else %}Not found{% endif %}</strong><small>from your record</small></div>
-        <div class="metric-card"><span>Blood pressure</span><strong>{{ pressure_text(metrics) }}</strong><small>{{ metrics.blood_pressure_count }} readings</small></div>
-        <div class="metric-card"><span>{{ 'Sample records loaded' if sample_mode else 'Records synced' }}</span><strong>{{ counts.values()|sum }}</strong><small>encrypted on this device</small></div>
+        <div class="metric-card"><span>Latest eGFR</span><strong>{% if metrics.latest_egfr %}{{
+            metrics.latest_egfr.value|round(1) }} {{ metrics.latest_egfr.unit }}{% else %}Not found{% endif
+            %}</strong><small>from your record</small></div>
+        <div class="metric-card"><span>Blood pressure</span><strong>{{ pressure_text(metrics) }}</strong><small>{{
+            metrics.blood_pressure_count }} readings</small></div>
+        <div class="metric-card"><span>{{ 'Sample records loaded' if sample_mode else 'Records synced'
+            }}</span><strong>{{ counts.values()|sum }}</strong><small>encrypted on this device</small></div>
       </div>
-      {% if sync_warnings %}<div class="notice notice-warning"><span class="notice-icon">!</span><span>Some optional record categories were unavailable: {{ sync_warnings|join(', ') }}. Available records were still saved.</span></div>{% endif %}
+      {% if sync_warnings %}<div class="notice notice-warning"><span class="notice-icon">!</span><span>Some optional
+          record categories were unavailable: {{ sync_warnings|join(', ') }}. Available records were still saved.</span>
+      </div>{% endif %}
 
-      <section class="section-block"><div class="section-heading"><div><p class="eyebrow">Make it yours</p><h2>Quick log</h2></div><span class="muted">Saved on this device</span></div>
+      <section class="section-block">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">Make it yours</p>
+            <h2>Quick log</h2>
+          </div><span class="muted">Saved on this device</span>
+        </div>
         <div class="quick-grid">
-          <button class="quick-card" type="button" data-log="weight"><span class="quick-icon">↕</span><strong>Weight</strong><small>check in</small></button>
-          <button class="quick-card" type="button" data-log="protein"><span class="quick-icon">◒</span><strong>Protein</strong><small>add a serving</small></button>
-          <button class="quick-card" type="button" data-log="water"><span class="quick-icon">◌</span><strong>Water</strong><small>add a glass</small></button>
-          <button class="quick-card" type="button" data-log="mood"><span class="quick-icon">☺</span><strong>Mood</strong><small>1–5 check-in</small></button>
-          <button class="quick-card" type="button" data-log="movement"><span class="quick-icon">✦</span><strong>Movement</strong><small>log a session</small></button>
-          <button class="quick-card" type="button" data-log="side-effect"><span class="quick-icon">+</span><strong>Side effect</strong><small>tell your care team</small></button>
+          <button class="quick-card" type="button" data-log="weight"><span
+              class="quick-icon">↕</span><strong>Weight</strong><small>check in</small></button>
+          <button class="quick-card" type="button" data-log="protein"><span
+              class="quick-icon">◒</span><strong>Protein</strong><small>add a serving</small></button>
+          <button class="quick-card" type="button" data-log="water"><span
+              class="quick-icon">◌</span><strong>Water</strong><small>add a glass</small></button>
+          <button class="quick-card" type="button" data-log="mood"><span
+              class="quick-icon">☺</span><strong>Mood</strong><small>1–5 check-in</small></button>
+          <button class="quick-card" type="button" data-log="movement"><span
+              class="quick-icon">✦</span><strong>Movement</strong><small>log a session</small></button>
+          <button class="quick-card" type="button" data-log="side-effect"><span class="quick-icon">+</span><strong>Side
+              effect</strong><small>tell your care team</small></button>
         </div>
       </section>
 
-      <section class="section-block"><div class="section-heading"><div><p class="eyebrow">Small wins</p><h2>Today’s actions</h2></div></div>
-        <div class="action-list"><button class="action-card" data-log="weigh-in"><span class="action-check">○</span><span><strong>Take a weigh-in</strong><small>Keep a gentle trend, not a perfect number.</small></span><span class="action-arrow">→</span></button><button class="action-card" data-log="a1c"><span class="action-check">○</span><span><strong>Review your A1c</strong><small>{% if metrics.a1c_trend %}You have results ready to review.{% else %}No recent A1c found in this snapshot.{% endif %}</small></span><span class="action-arrow">→</span></button><button class="action-card" data-log="strength"><span class="action-check">○</span><span><strong>Move for 10 minutes</strong><small>A small session counts.</small></span><span class="action-arrow">→</span></button></div>
+      <section class="section-block">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">Small wins</p>
+            <h2>Today’s actions</h2>
+          </div>
+        </div>
+        <div class="action-list"><button class="action-card" data-log="weigh-in"><span
+              class="action-check">○</span><span><strong>Take a weigh-in</strong><small>Keep a gentle trend, not a
+                perfect number.</small></span><span class="action-arrow">→</span></button><button class="action-card"
+            data-log="a1c"><span class="action-check">○</span><span><strong>Review your A1c</strong><small>{% if
+                metrics.a1c_trend %}You have results ready to review.{% else %}No recent A1c found in this snapshot.{%
+                endif %}</small></span><span class="action-arrow">→</span></button><button class="action-card"
+            data-log="strength"><span class="action-check">○</span><span><strong>Move for 10 minutes</strong><small>A
+                small session counts.</small></span><span class="action-arrow">→</span></button></div>
       </section>
     </section>
 
-    <section id="panel-journey" class="tab-panel" role="tabpanel" aria-labelledby="tab-journey" tabindex="0" data-tab-panel="journey" hidden>
-      <div class="section-heading"><div><p class="eyebrow">Your next step</p><h1>Readiness check</h1><p class="muted">A few answers help put your record in context. This is not a diagnosis.</p></div></div>
-      <div class="question-card card"><h2>Are you currently breastfeeding?</h2><div class="choice-row" role="group" aria-label="Breastfeeding status"><button type="button" data-answer="breastfeeding" data-value="yes" aria-pressed="false">Yes</button><button type="button" data-answer="breastfeeding" data-value="weaned" aria-pressed="false">No, weaned</button><button type="button" data-answer="breastfeeding" data-value="never" aria-pressed="false">No</button></div></div>
-      <div class="question-card card"><h2>Are you planning a pregnancy?</h2><div class="choice-row" role="group" aria-label="Pregnancy plans"><button type="button" data-answer="pregnancyPlan" data-value="yes" aria-pressed="false">Yes</button><button type="button" data-answer="pregnancyPlan" data-value="no" aria-pressed="false">No</button><button type="button" data-answer="pregnancyPlan" data-value="unsure" aria-pressed="false">Not sure</button></div></div>
-      <div class="record-columns"><section class="card"><div class="section-heading"><h2>Conditions</h2><span class="record-count">{{ conditions|length }}</span></div>{% if conditions %}<ul class="record-list">{% for row in conditions %}<li><span><strong>{{ row.display }}</strong><small>{{ row.onset }}</small></span><em>{{ row.status }}</em></li>{% endfor %}</ul>{% else %}<p class="empty-state">No conditions found in this snapshot.</p>{% endif %}</section><section class="card"><div class="section-heading"><h2>Medications</h2><span class="record-count">{{ medications|length }}</span></div>{% if medications %}<ul class="record-list">{% for row in medications %}<li><span><strong>{{ row.display }}</strong><small>{{ row.details or row.date }}</small></span><em>{{ row.status }}</em></li>{% endfor %}</ul>{% else %}<p class="empty-state">MedicationRequest access may be needed for prescriptions.</p>{% endif %}</section></div>
-      <section class="card"><div class="section-heading"><h2>Coverage</h2><span class="record-count">{{ coverage|length }}</span></div>{% if coverage %}<ul class="record-list">{% for row in coverage %}<li><span><strong>{{ row.display }}</strong><small>{{ row.period }}</small></span><em>{{ row.status }}</em></li>{% endfor %}</ul>{% else %}<p class="empty-state">No coverage records found.</p>{% endif %}</section>
+    <section id="panel-journey" class="tab-panel" role="tabpanel" aria-labelledby="tab-journey" tabindex="0"
+      data-tab-panel="journey" hidden>
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">Your next step</p>
+          <h1>Readiness check</h1>
+          <p class="muted">A few answers help put your record in context. This is not a diagnosis.</p>
+        </div>
+      </div>
+      <div class="question-card card">
+        <h2>Are you currently breastfeeding?</h2>
+        <div class="choice-row" role="group" aria-label="Breastfeeding status"><button type="button"
+            data-answer="breastfeeding" data-value="yes" aria-pressed="false">Yes</button><button type="button"
+            data-answer="breastfeeding" data-value="weaned" aria-pressed="false">No, weaned</button><button
+            type="button" data-answer="breastfeeding" data-value="never" aria-pressed="false">No</button></div>
+      </div>
+      <div class="question-card card">
+        <h2>Are you planning a pregnancy?</h2>
+        <div class="choice-row" role="group" aria-label="Pregnancy plans"><button type="button"
+            data-answer="pregnancyPlan" data-value="yes" aria-pressed="false">Yes</button><button type="button"
+            data-answer="pregnancyPlan" data-value="no" aria-pressed="false">No</button><button type="button"
+            data-answer="pregnancyPlan" data-value="unsure" aria-pressed="false">Not sure</button></div>
+      </div>
+      <div class="record-columns">
+        <section class="card">
+          <div class="section-heading">
+            <h2>Conditions</h2><span class="record-count">{{ conditions|length }}</span>
+          </div>{% if conditions %}<ul class="record-list">{% for row in conditions %}<li><span><strong>{{ row.display
+                  }}</strong><small>{{ row.onset }}</small></span><em>{{ row.status }}</em></li>{% endfor %}</ul>{% else
+          %}<p class="empty-state">No conditions found in this snapshot.</p>{% endif %}
+        </section>
+        <section class="card">
+          <div class="section-heading">
+            <h2>Medications</h2><span class="record-count">{{ medications|length }}</span>
+          </div>{% if medications %}<ul class="record-list">{% for row in medications %}<li><span><strong>{{ row.display
+                  }}</strong><small>{{ row.details or row.date }}</small></span><em>{{ row.status }}</em></li>{% endfor
+            %}</ul>{% else %}<p class="empty-state">MedicationRequest access may be needed for prescriptions.</p>{%
+          endif %}
+        </section>
+      </div>
+      <section class="card">
+        <div class="section-heading">
+          <h2>Coverage</h2><span class="record-count">{{ coverage|length }}</span>
+        </div>{% if coverage %}<ul class="record-list">{% for row in coverage %}<li><span><strong>{{ row.display
+                }}</strong><small>{{ row.period }}</small></span><em>{{ row.status }}</em></li>{% endfor %}</ul>{% else
+        %}<p class="empty-state">No coverage records found.</p>{% endif %}
+      </section>
     </section>
 
-    <section id="panel-progress" class="tab-panel" role="tabpanel" aria-labelledby="tab-progress" tabindex="0" data-tab-panel="progress" hidden>
-      <div class="section-heading"><div><p class="eyebrow">Patterns, not perfection</p><h1>Your progress</h1><p class="muted">Record-backed trends with room for your own check-ins.</p></div></div>
-      <div class="metric-grid metric-grid-large"><div class="metric-card"><span>A1c trend</span><strong>{{ metrics.a1c_trend|length }}</strong><small>results in this snapshot</small></div><div class="metric-card"><span>Average blood pressure</span><strong>{{ pressure_text(metrics) }}</strong><small>mmHg · {{ metrics.blood_pressure_count }} paired readings</small></div><div class="metric-card"><span>Vitals available</span><strong>{{ vitals|length }}</strong><small>recent rows shown below</small></div></div>
-      <div class="record-columns"><section class="card"><div class="section-heading"><h2>Recent labs</h2><span class="record-count">{{ labs|length }}</span></div>{% if labs %}<div class="table-wrap"><table><thead><tr><th>Date</th><th>Test</th><th>Result</th></tr></thead><tbody>{% for row in labs %}<tr><td>{{ row.date }}</td><td>{{ row.display }}</td><td>{{ row.value }}</td></tr>{% endfor %}</tbody></table></div>{% else %}<p class="empty-state">No lab results synced.</p>{% endif %}</section><section class="card"><div class="section-heading"><h2>Recent vitals</h2><span class="record-count">{{ vitals|length }}</span></div>{% if vitals %}<div class="table-wrap"><table><thead><tr><th>Date</th><th>Measure</th><th>Value</th></tr></thead><tbody>{% for row in vitals %}<tr><td>{{ row.date }}</td><td>{{ row.display }}</td><td>{{ row.value }}</td></tr>{% endfor %}</tbody></table></div>{% else %}<p class="empty-state">No vital signs synced.</p>{% endif %}</section></div>
+    <section id="panel-progress" class="tab-panel" role="tabpanel" aria-labelledby="tab-progress" tabindex="0"
+      data-tab-panel="progress" hidden>
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">Patterns, not perfection</p>
+          <h1>Your progress</h1>
+          <p class="muted">Record-backed trends with room for your own check-ins.</p>
+        </div>
+      </div>
+      <div class="metric-grid metric-grid-large">
+        <div class="metric-card"><span>A1c trend</span><strong>{{ metrics.a1c_trend|length }}</strong><small>results in
+            this snapshot</small></div>
+        <div class="metric-card"><span>Average blood pressure</span><strong>{{ pressure_text(metrics)
+            }}</strong><small>mmHg · {{ metrics.blood_pressure_count }} paired readings</small></div>
+        <div class="metric-card"><span>Vitals available</span><strong>{{ vitals|length }}</strong><small>recent rows
+            shown below</small></div>
+      </div>
+      <div class="record-columns">
+        <section class="card">
+          <div class="section-heading">
+            <h2>Recent labs</h2><span class="record-count">{{ labs|length }}</span>
+          </div>{% if labs %}<div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Test</th>
+                  <th>Result</th>
+                </tr>
+              </thead>
+              <tbody>{% for row in labs %}<tr>
+                  <td>{{ row.date }}</td>
+                  <td>{{ row.display }}</td>
+                  <td>{{ row.value }}</td>
+                </tr>{% endfor %}</tbody>
+            </table>
+          </div>{% else %}<p class="empty-state">No lab results synced.</p>{% endif %}
+        </section>
+        <section class="card">
+          <div class="section-heading">
+            <h2>Recent vitals</h2><span class="record-count">{{ vitals|length }}</span>
+          </div>{% if vitals %}<div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Measure</th>
+                  <th>Value</th>
+                </tr>
+              </thead>
+              <tbody>{% for row in vitals %}<tr>
+                  <td>{{ row.date }}</td>
+                  <td>{{ row.display }}</td>
+                  <td>{{ row.value }}</td>
+                </tr>{% endfor %}</tbody>
+            </table>
+          </div>{% else %}<p class="empty-state">No vital signs synced.</p>{% endif %}
+        </section>
+      </div>
     </section>
 
-    <section id="panel-visit" class="tab-panel" role="tabpanel" aria-labelledby="tab-visit" tabindex="0" data-tab-panel="visit" hidden>
-      <div class="section-heading"><div><p class="eyebrow">Bring your questions with you</p><h1>Visit prep</h1><p class="muted">A plain-language summary to review with your clinician.</p></div><span class="step-chip">Draft</span></div>
-      <section class="card summary-card"><div class="summary-title"><span class="soft-icon">✦</span><div><h2>My Patient Agency summary</h2><p class="muted">Source: {{ connection.display_name or 'connected health record' }}</p></div></div><p>{{ patient.name or 'Patient' }} has {{ counts.get('Observation', 0) }} observation records available, including {{ metrics.a1c_trend|length }} A1c result(s). The current dashboard includes {{ conditions|length }} condition(s) and {{ medications|length }} medication record(s).</p><p class="muted">Add your own notes below before sharing with your care team.</p><textarea id="visit-notes" rows="5" placeholder="Questions I want to ask..."></textarea><div class="summary-actions"><button class="button button-primary" type="button" data-copy-summary>Copy summary</button><button class="button button-secondary" type="button" data-download-summary>Download .txt</button></div></section>
-      <section class="card"><div class="section-heading"><h2>Appointments</h2><span class="record-count">{{ appointments|length }}</span></div>{% if appointments %}<ul class="record-list">{% for row in appointments %}<li><span><strong>{{ row.display }}</strong><small>{{ row.date }}</small></span><em>{{ row.status }}</em></li>{% endfor %}</ul>{% else %}<p class="empty-state">No appointments synced.</p>{% endif %}</section>
+    <section id="panel-visit" class="tab-panel" role="tabpanel" aria-labelledby="tab-visit" tabindex="0"
+      data-tab-panel="visit" hidden>
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">Bring your questions with you</p>
+          <h1>Visit prep</h1>
+          <p class="muted">A plain-language summary to review with your clinician.</p>
+        </div><span class="step-chip">Draft</span>
+      </div>
+      <section class="card summary-card">
+        <div class="summary-title"><span class="soft-icon">✦</span>
+          <div>
+            <h2>My Patient Agency summary</h2>
+            <p class="muted">Source: {{ connection.display_name or 'connected health record' }}</p>
+          </div>
+        </div>
+        <p>{{ patient.name or 'Patient' }} has {{ counts.get('Observation', 0) }} observation records available,
+          including {{ metrics.a1c_trend|length }} A1c result(s). The current dashboard includes {{ conditions|length }}
+          condition(s) and {{ medications|length }} medication record(s).</p>
+        <p class="muted">Add your own notes below before sharing with your care team.</p><textarea id="visit-notes"
+          rows="5" placeholder="Questions I want to ask..."></textarea>
+        <div class="summary-actions"><button class="button button-primary" type="button" data-copy-summary>Copy
+            summary</button><button class="button button-secondary" type="button" data-download-summary>Download
+            .txt</button></div>
+      </section>
+      <section class="card">
+        <div class="section-heading">
+          <h2>Appointments</h2><span class="record-count">{{ appointments|length }}</span>
+        </div>{% if appointments %}<ul class="record-list">{% for row in appointments %}<li><span><strong>{{ row.display
+                }}</strong><small>{{ row.date }}</small></span><em>{{ row.status }}</em></li>{% endfor %}</ul>{% else %}
+        <p class="empty-state">No appointments synced.</p>{% endif %}
+      </section>
     </section>
 
-    <section id="panel-trials" class="tab-panel" role="tabpanel" aria-labelledby="tab-trials" tabindex="0" data-tab-panel="trials" hidden>
-      <div class="section-heading"><div><p class="eyebrow">Research, made easier to explore</p><h1>Clinical trials</h1><p class="muted">Studies to discuss with your clinician—not a determination that you qualify.</p></div><span class="step-chip">ClinicalTrials.gov</span></div>
-      <section class="card"><h2>Start with your record</h2><p>Source: {{ 'fictional Maya sample' if sample_mode else connection.display_name }}. Your stored FHIR JSON is read locally to find age, recorded sex, conditions, and supported lab values.</p><div id="trial-profile" aria-live="polite">Reading your local record…</div><p class="fine-print">Lab-derived topics are search suggestions, not diagnoses. Records may be old or incomplete. Pregnancy, breastfeeding, medications, and other criteria still need study-team review.</p></section>
+    <section id="panel-trials" class="tab-panel" role="tabpanel" aria-labelledby="tab-trials" tabindex="0"
+      data-tab-panel="trials" hidden>
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">Research, made easier to explore</p>
+          <h1>Clinical trials</h1>
+          <p class="muted">Studies to discuss with your clinician—not a determination that you qualify.</p>
+        </div><span class="step-chip">ClinicalTrials.gov</span>
+      </div>
+      <section class="card">
+        <h2>Start with your record</h2>
+        <p>Source: {{ 'fictional Maya sample' if sample_mode else connection.display_name }}. Your stored FHIR JSON is
+          read locally to find age, recorded sex, conditions, and supported lab values.</p>
+        <div id="trial-profile" aria-live="polite">Reading your local record…</div>
+        <p class="fine-print">Lab-derived topics are search suggestions, not diagnoses. Records may be old or
+          incomplete. Pregnancy, breastfeeding, medications, and other criteria still need study-team review.</p>
+      </section>
       <form id="trial-search-form" class="card">
-        <h2>Explore recruiting studies</h2><p>Only the displayed condition/search topics and optional coordinates are sent to ClinicalTrials.gov. Your name, identifiers, birth date, medications, and lab values are not sent there. No Epic secret is used for this search.</p>
-        <div class="trial-location"><label>Latitude (optional)<input name="lat" type="number" step="any" min="-90" max="90" placeholder="42.36"></label><label>Longitude (optional)<input name="lon" type="number" step="any" min="-180" max="180" placeholder="-71.06"></label><label>Radius (miles)<input name="miles" type="number" min="1" max="500" value="100"></label></div>
-        <label class="consent-row"><input id="trial-consent" type="checkbox" required><span>I agree to send these search topics and any coordinates I enter to ClinicalTrials.gov.</span></label>
-        <label class="consent-row"><input name="all" type="checkbox"><span>Also show studies with possible eligibility barriers.</span></label>
+        <h2>Explore recruiting studies</h2>
+        <p>Only the displayed condition/search topics and optional coordinates are sent to ClinicalTrials.gov. Your
+          name, identifiers, birth date, medications, and lab values are not sent there. No Epic secret is used for this
+          search.</p>
+        <div class="trial-location"><label>Latitude (optional)<input name="lat" type="number" step="any" min="-90"
+              max="90" placeholder="42.36"></label><label>Longitude (optional)<input name="lon" type="number" step="any"
+              min="-180" max="180" placeholder="-71.06"></label><label>Radius (miles)<input name="miles" type="number"
+              min="1" max="500" value="100"></label></div>
+        <label class="consent-row"><input id="trial-consent" type="checkbox" required><span>I agree to send these search
+            topics and any coordinates I enter to ClinicalTrials.gov.</span></label>
+        <label class="consent-row"><input name="all" type="checkbox"><span>Also show studies with possible eligibility
+            barriers.</span></label>
+        <br />
         <button id="trial-search-button" class="button button-primary" disabled>Find clinical trials</button>
       </form>
-      <p id="trial-status" role="status" aria-live="polite"></p><div id="trial-results" class="trial-results"></div>
+      <p id="trial-status" role="status" aria-live="polite"></p>
+      <div id="trial-results" class="trial-results"></div>
     </section>
 
-    <section id="panel-health" class="tab-panel" role="tabpanel" aria-labelledby="tab-health" tabindex="0" data-tab-panel="health" hidden>
-      <div class="section-heading"><div><p class="eyebrow">Make sense of your record</p><h1>Ask about your health</h1><p class="muted">A plain-language explanation, with questions to take to your care team.</p></div><span class="step-chip">AI · NVIDIA</span></div>
-      <section class="card"><h2>Your record, explained</h2><p>This optional feature sends your question and the context below to NVIDIA’s hosted GLM model. Unlike the rest of this local dashboard, this is external processing. Names, record IDs, addresses, and exact birth dates are excluded from the structured context; it still contains sensitive health information. Don’t put identifying details in your question.</p><p class="fine-print">Prototype for sandbox or fictional data. No claim of HIPAA compliance or NVIDIA zero retention is made. Review provider terms before any real-patient use.</p><details><summary>Review exactly which record context will be sent</summary><pre id="health-context" class="health-context">Open this tab to load the local preview.</pre></details><p id="health-config" role="status"></p></section>
+    <section id="panel-health" class="tab-panel" role="tabpanel" aria-labelledby="tab-health" tabindex="0"
+      data-tab-panel="health" hidden>
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">Make sense of your record</p>
+          <h1>Ask about your health</h1>
+          <p class="muted">A plain-language explanation, with questions to take to your care team.</p>
+        </div><span class="step-chip">AI · NVIDIA</span>
+      </div>
+      <section class="card">
+        <h2>Your record, explained</h2>
+        <p>This optional feature sends your question and the context below to NVIDIA’s hosted GLM model. Unlike the rest
+          of this local dashboard, this is external processing. Names, record IDs, addresses, and exact birth dates are
+          excluded from the structured context; it still contains sensitive health information. Don’t put identifying
+          details in your question.</p>
+        <p class="fine-print">Prototype for sandbox or fictional data. No claim of HIPAA compliance or NVIDIA zero
+          retention is made. Review provider terms before any real-patient use.</p>
+        <details>
+          <summary>Review exactly which record context will be sent</summary>
+          <pre id="health-context" class="health-context">Open this tab to load the local preview.</pre>
+        </details>
+        <p id="health-config" role="status"></p>
+      </section>
       <form id="health-form" class="card">
-        <label for="health-question"><h2>What would you like to understand?</h2></label>
-        <textarea id="health-question" rows="4" maxlength="1200" required placeholder="Explain my recent results and what I should ask my clinician."></textarea>
-        <div class="choice-row"><button type="button" data-health-prompt="Explain my recent results in simple terms. Which results are missing or old?">Explain my results</button><button type="button" data-health-prompt="What questions should I take to my next appointment?">Prepare for my visit</button><button type="button" data-health-prompt="Which retrieved clinical trials might be worth discussing with my clinician, and what eligibility details are still unknown?">Explore research</button></div>
-        <label class="consent-row"><input id="health-consent" type="checkbox" required><span>I agree to send my question and the previewed health context to NVIDIA for this explanation.</span></label>
-        <label class="consent-row"><input id="health-trials" type="checkbox"><span>Also find clinical trials. I agree to send the previewed condition/search topics to ClinicalTrials.gov, and the retrieved study details to NVIDIA.</span></label>
-        <p class="fine-print">Answers use the current question and record only—not earlier messages. Nothing from this conversation is saved by this app; external provider policies still apply. This is not a clinician or emergency service. For urgent symptoms, seek immediate medical help.</p>
-        <div class="summary-actions"><button id="health-send" class="button button-primary" disabled>Ask about my record</button><button id="health-clear" type="button" class="button button-secondary">Clear &amp; refresh context</button></div>
+        <label for="health-question">
+          <h2>What would you like to understand?</h2>
+        </label>
+        <textarea id="health-question" rows="4" maxlength="1200" required
+          placeholder="Explain my recent results and what I should ask my clinician."></textarea>
+        <div class="choice-row"><button type="button"
+            data-health-prompt="Explain my recent results in simple terms. Which results are missing or old?">Explain my
+            results</button><button type="button"
+            data-health-prompt="What questions should I take to my next appointment?">Prepare for my
+            visit</button><button type="button"
+            data-health-prompt="Which retrieved clinical trials might be worth discussing with my clinician, and what eligibility details are still unknown?">Explore
+            research</button></div>
+        <label class="consent-row"><input id="health-consent" type="checkbox" required><span>I agree to send my question
+            and the previewed health context to NVIDIA for this explanation.</span></label>
+        <label class="consent-row"><input id="health-trials" type="checkbox"><span>Also find clinical trials. I agree to
+            send the previewed condition/search topics to ClinicalTrials.gov, and the retrieved study details to
+            NVIDIA.</span></label>
+        <p class="fine-print">Answers use the current question and record only—not earlier messages. Nothing from this
+          conversation is saved by this app; external provider policies still apply. This is not a clinician or
+          emergency service. For urgent symptoms, seek immediate medical help.</p>
+        <div class="summary-actions"><button id="health-send" class="button button-primary" disabled>Ask about my
+            record</button><button id="health-clear" type="button" class="button button-secondary">Clear &amp; refresh
+            context</button></div>
       </form>
-      <p id="health-status" role="status" aria-live="polite"></p><div id="health-answer" class="card health-answer" hidden></div><div id="health-trial-results"></div>
+      <p id="health-status" role="status" aria-live="polite"></p>
+      <div id="health-answer" class="card health-answer" hidden></div>
+      <div id="health-trial-results"></div>
     </section>
 
-    <section id="panel-my-data" class="tab-panel" role="tabpanel" aria-labelledby="tab-my-data" tabindex="0" data-tab-panel="my-data" hidden>
-      <div class="section-heading"><div><p class="eyebrow">Your data, your choice</p><h1>My data</h1><p class="muted">Records are stored locally. Optional AI explanations and trial searches share the context you approve with external providers.</p></div></div>
-      <section class="card source-card"><div class="source-card-icon">⌁</div><div><p class="eyebrow">{{ 'Sample source' if sample_mode else 'Connected source' }}</p><h2>{{ connection.display_name or connection.fhir_base_url }}</h2><p class="muted">{% if sample_mode %}Loaded from the repository’s fictional Maya FHIR bundle.{% else %}Last sync: {{ last_sync or 'Not synced yet' }}{% endif %}</p></div><span class="connected-label">{{ 'Synthetic' if sample_mode else 'Connected' }}</span></section>
+    <section id="panel-my-data" class="tab-panel" role="tabpanel" aria-labelledby="tab-my-data" tabindex="0"
+      data-tab-panel="my-data" hidden>
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">Your data, your choice</p>
+          <h1>My data</h1>
+          <p class="muted">Records are stored locally. Optional AI explanations and trial searches share the context you
+            approve with external providers.</p>
+        </div>
+      </div>
+      <section class="card source-card">
+        <div class="source-card-icon">⌁</div>
+        <div>
+          <p class="eyebrow">{{ 'Sample source' if sample_mode else 'Connected source' }}</p>
+          <h2>{{ connection.display_name or connection.fhir_base_url }}</h2>
+          <p class="muted">{% if sample_mode %}Loaded from the repository’s fictional Maya FHIR bundle.{% else %}Last
+            sync: {{ last_sync or 'Not synced yet' }}{% endif %}</p>
+        </div><span class="connected-label">{{ 'Synthetic' if sample_mode else 'Connected' }}</span>
+      </section>
       {% if sample_mode %}
-      <section class="card"><h2>Sample record store</h2><p>{{ counts.values()|sum }} fictional records are stored separately from any Epic connection. No access token or scheduled sync is used.</p><a href="{{ url_for('sample_json') }}">View the stored FHIR JSON</a></section>
+      <section class="card">
+        <h2>Sample record store</h2>
+        <p>{{ counts.values()|sum }} fictional records are stored separately from any Epic connection. No access token
+          or scheduled sync is used.</p><a href="{{ url_for('sample_json') }}">View the stored FHIR JSON</a>
+      </section>
       {% else %}
-      <section class="card"><div class="section-heading"><h2>Local record store</h2><span class="record-count">{{ counts.values()|sum }}</span></div><p class="muted">FHIR records and refresh credentials are encrypted with your local key. Patient Agency does not send your record to a third-party analytics service.</p><div class="data-actions"><form method="post" action="{{ url_for('sync_now') }}"><button class="button button-primary" type="submit">Sync now</button></form><form method="post" action="{{ url_for('disconnect') }}"><button class="button button-danger" type="submit">Disconnect source</button></form></div></section>
-      <section class="card privacy-card"><h2>Privacy reminder</h2><p>Disconnecting stops future syncs. This prototype does not delete existing encrypted local records yet; remove the local database when you want a full wipe.</p><a href="{{ url_for('terms') }}">Read terms and conditions →</a></section>
+      <section class="card">
+        <div class="section-heading">
+          <h2>Local record store</h2><span class="record-count">{{ counts.values()|sum }}</span>
+        </div>
+        <p class="muted">FHIR records and refresh credentials are encrypted with your local key. Patient Agency does not
+          send your record to a third-party analytics service.</p>
+        <div class="data-actions">
+          <form method="post" action="{{ url_for('sync_now') }}"><button class="button button-primary"
+              type="submit">Sync now</button></form>
+          <form method="post" action="{{ url_for('disconnect') }}"><button class="button button-danger"
+              type="submit">Disconnect source</button></form>
+        </div>
+      </section>
+      <section class="card privacy-card">
+        <h2>Privacy reminder</h2>
+        <p>Disconnecting stops future syncs. This prototype does not delete existing encrypted local records yet; remove
+          the local database when you want a full wipe.</p><a href="{{ url_for('terms') }}">Read terms and conditions
+          →</a>
+      </section>
       {% endif %}
     </section>
 
     <div class="toast" data-toast role="status" aria-live="polite"></div>
     {% endif %}
   </main>
-  <footer class="footer"><span>Patient Agency · prototype</span><a href="{{ url_for('terms') }}">Terms &amp; conditions</a></footer>
+  <footer class="footer"><span>Patient Agency · prototype</span><a href="{{ url_for('terms') }}">Terms &amp;
+      conditions</a></footer>
   <script src="{{ url_for('static', filename='app.js') }}"></script>
   <script src="{{ url_for('static', filename='trials.js') }}"></script>
   <script src="{{ url_for('static', filename='health.js') }}"></script>
 </body>
+
 </html>

@@ -1,0 +1,418 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ trial.sponsor }} Sponsor Portal — {{ trial.nct_id }} Cohort Data Room | Nudge Lab</title>
+  <meta name="description" content="Secure, de-identified clinical trial candidate data room for {{ trial.sponsor }}. Review verified patient biomarkers and sponsor targeted data acquisition bounties.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='company.css') }}">
+</head>
+<body>
+
+  <!-- Sponsor Portal Navigation Bar -->
+  <header class="sponsor-nav">
+    <div class="portal-container sponsor-nav-inner">
+      <div class="brand-cobrand">
+        <a href="/" class="nudge-brand" aria-label="Nudge Lab Home">
+          <div class="nudge-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+          </div>
+          <span>Nudge Lab</span>
+        </a>
+        <span class="brand-separator">&times;</span>
+        <div class="pharma-partner-badge" id="pharma-partner-badge">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          <span>{{ trial.sponsor }} Clinical Portal</span>
+        </div>
+      </div>
+
+      <div class="sponsor-nav-actions">
+        <span class="secure-badge">
+          <span class="pulse-dot-sm"></span>
+          HIPAA De-Identified Data Room
+        </span>
+        <a href="/" class="btn-secondary-sm">
+          &larr; Patient Platform
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <main class="portal-container">
+    <!-- Clinical Trial Header & Overview -->
+    <section class="trial-hero">
+      <div class="trial-hero-card">
+        <div class="trial-top-row">
+          <div class="trial-tags">
+            <span class="tag-phase">{{ trial.phase }}</span>
+            <span class="tag-status">
+              <span class="pulse-dot-sm"></span>
+              {{ trial.status }}
+            </span>
+            <span class="tag-nct">{{ trial.nct_id }}</span>
+            <span class="tag-nct" style="color: #60a5fa;">Protocol: {{ trial.protocol_id }}</span>
+          </div>
+          <div style="font-size: 0.85rem; color: var(--text-muted);">
+            Investigational Agent: <strong style="color: #fff;">{{ trial.drug_name }}</strong> ({{ trial.drug_class }})
+          </div>
+        </div>
+
+        <h1 class="trial-hero-title">{{ trial.title }}</h1>
+        <p class="trial-hero-summary">{{ trial.summary }}</p>
+
+        <!-- Key Trial Metadata -->
+        <div class="trial-meta-grid">
+          <div class="meta-item">
+            <span class="meta-label">Primary Indication</span>
+            <span class="meta-val">{{ trial.condition }}</span>
+          </div>
+          <div class="meta-item">
+            <span class="meta-label">Therapeutic Area</span>
+            <span class="meta-val">{{ trial.therapeutic_area }}</span>
+          </div>
+          <div class="meta-item">
+            <span class="meta-label">Active Research Sites</span>
+            <span class="meta-val">{{ trial.sites_count }} Investigative Centers</span>
+          </div>
+          <div class="meta-item">
+            <span class="meta-label">Primary Completion</span>
+            <span class="meta-val">{{ trial.primary_completion }}</span>
+          </div>
+        </div>
+
+        <!-- Protocol Eligibility Criteria Accordion -->
+        <div class="criteria-box">
+          <div class="criteria-header" id="criteria-toggle" onclick="toggleCriteria()">
+            <div class="criteria-title">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+              <span>Official Protocol Eligibility Criteria (ClinicalTrials.gov)</span>
+            </div>
+            <span id="criteria-arrow" style="color: var(--text-muted); font-size: 0.85rem;">Collapse &minus;</span>
+          </div>
+
+          <div class="criteria-grid" id="criteria-body">
+            <div class="criteria-col inc">
+              <h4>Key Inclusion Requirements</h4>
+              <ul class="criteria-list">
+                {% for item in trial.inclusion_criteria %}
+                <li>
+                  <svg viewBox="0 0 24 24" fill="none" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                  <span>{{ item }}</span>
+                </li>
+                {% endfor %}
+              </ul>
+            </div>
+            <div class="criteria-col exc">
+              <h4>Key Exclusion Restrictions</h4>
+              <ul class="criteria-list">
+                {% for item in trial.exclusion_criteria %}
+                <li>
+                  <svg viewBox="0 0 24 24" fill="none" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                  <span>{{ item }}</span>
+                </li>
+                {% endfor %}
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Cohort Summary Metrics Bar -->
+    <section class="cohort-summary-bar">
+      <div class="cohort-stat-card">
+        <span class="cohort-stat-badge">Live Candidate Pool</span>
+        <div class="cohort-stat-number">{{ trial.candidates|length }}</div>
+        <div class="cohort-stat-label">Verified Pre-Screened Candidates</div>
+      </div>
+
+      <div class="cohort-stat-card">
+        <span class="cohort-stat-badge">Algorithmic Fit</span>
+        <div class="cohort-stat-number">95.4%</div>
+        <div class="cohort-stat-label">Mean Protocol Fit Score</div>
+      </div>
+
+      <div class="cohort-stat-card">
+        <span class="cohort-stat-badge">SMART-on-FHIR</span>
+        <div class="cohort-stat-number">100%</div>
+        <div class="cohort-stat-label">EHR-Authenticated Lab Data</div>
+      </div>
+
+      <div class="cohort-stat-card">
+        <span class="cohort-stat-badge">Patient Sovereign</span>
+        <div class="cohort-stat-number">100%</div>
+        <div class="cohort-stat-label">Direct Patient Bounty Escrow</div>
+      </div>
+    </section>
+
+    <!-- Candidate Profiles Section -->
+    <section>
+      <div class="section-heading-row">
+        <div>
+          <h2>Anonymized Candidate Profiles &amp; Data Gap Analysis</h2>
+          <p>
+            Real patients who connected their health system and granted cryptographic consent to share de-identified records for {{ trial.sponsor }} study evaluation.
+          </p>
+        </div>
+        <div style="font-size: 0.85rem; color: var(--text-dim);">
+          Showing {{ trial.candidates|length }} candidate matches &bull; Sorted by protocol fit
+        </div>
+      </div>
+
+      <div class="candidate-cards-list">
+        {% for candidate in trial.candidates %}
+        <article class="candidate-card" id="card-{{ candidate.id }}">
+          <!-- Candidate Header -->
+          <div class="candidate-header">
+            <div class="candidate-id-group">
+              <div class="candidate-avatar-icon">
+                {{ candidate.id[-4:] }}
+              </div>
+              <div>
+                <h3 class="candidate-title">Patient Profile {{ candidate.id }}</h3>
+                <div class="candidate-sub">
+                  {{ candidate.age_bracket }} &bull; {{ candidate.location }} &bull; Consent Hash: <code>{{ candidate.consent_hash }}</code>
+                </div>
+              </div>
+            </div>
+
+            <div class="candidate-match-pill">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+              <span>{{ candidate.match_score }}% Protocol Match</span>
+            </div>
+          </div>
+
+          <!-- Two Columns: Provided Biomarkers vs Data Gap Analysis -->
+          <div class="candidate-details-grid">
+            <!-- Left: Verified Provided Data -->
+            <div class="provided-column">
+              <h4>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                Verified Biomarkers Provided (FHIR R4)
+              </h4>
+              <table class="biomarkers-table">
+                <thead>
+                  <tr>
+                    <th>Biomarker Criterion</th>
+                    <th>Observed Value</th>
+                    <th>Clinical Source</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for b in candidate.verified_biomarkers %}
+                  <tr>
+                    <td class="biomarker-name-cell">{{ b.name }}</td>
+                    <td class="biomarker-val-cell">{{ b.value }}</td>
+                    <td class="biomarker-source-cell">{{ b.source }}</td>
+                    <td>
+                      <span class="status-check-tag">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                        Fit Verified
+                      </span>
+                    </td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Right: Missing Protocol Data / Acquisition Offer -->
+            <div class="datagap-column">
+              <div>
+                <h4>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                  Data Gap Analysis (Missing Protocol Requirements)
+                </h4>
+                <div class="datagap-list">
+                  {% for gap in candidate.missing_data %}
+                  <div class="datagap-item" id="gap-{{ candidate.id }}-{{ loop.index }}">
+                    <div class="datagap-top">
+                      <span class="datagap-name">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#f87171" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                        {{ gap.biomarker }}
+                      </span>
+                      <span class="datagap-priority">{{ gap.importance }}</span>
+                    </div>
+                    <p class="datagap-rationale">
+                      <strong>Protocol Requirement:</strong> {{ gap.why_needed }}<br>
+                      <span style="color: var(--text-dim); font-size: 0.78rem;">Turnaround: {{ gap.turnaround }}</span>
+                    </p>
+                    <div class="datagap-action-row">
+                      <div class="bounty-amount">
+                        Patient Bounty: <strong>${{ gap.acquisition_cost }}</strong>
+                      </div>
+                      <button 
+                        type="button" 
+                        class="btn-acquire" 
+                        id="btn-acquire-{{ candidate.id }}-{{ loop.index }}"
+                        onclick="openAcquisitionModal('{{ candidate.id }}', '{{ gap.biomarker }}', {{ gap.acquisition_cost }}, 'btn-acquire-{{ candidate.id }}-{{ loop.index }}')">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                        Fund Lab Bounty (${{ gap.acquisition_cost }})
+                      </button>
+                    </div>
+                  </div>
+                  {% endfor %}
+                </div>
+              </div>
+
+              <div style="margin-top: 1rem; padding-top: 0.75rem; border-top: 1px solid rgba(255, 255, 255, 0.05); font-size: 0.78rem; color: var(--text-dim);">
+                💡 <strong>How Data Acquisition Works:</strong> Once funded, Nudge Lab sends a digital lab requisition to the patient's local vault. 100% of the stipend is deposited into escrow and paid to the patient upon verified lab delivery.
+              </div>
+            </div>
+          </div>
+        </article>
+        {% endfor %}
+      </div>
+    </section>
+
+    <!-- HIPAA Safe Harbor & Cryptographic Provenance Guarantee -->
+    <section class="compliance-footer-banner">
+      <div class="compliance-col">
+        <h4>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#34d399" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          HIPAA Safe Harbor Certified
+        </h4>
+        <p>
+          All 18 HIPAA Safe Harbor identifiers (names, exact birthdates, SSNs, phone numbers) are stripped client-side prior to sponsor ingestion.
+        </p>
+      </div>
+
+      <div class="compliance-col">
+        <h4>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          Cryptographic Provenance
+        </h4>
+        <p>
+          Biomarker validity is cryptographically signed via HL7 FHIR R4 provenance headers directly from certified EHR endpoints (Epic / Cerner / Labcorp).
+        </p>
+      </div>
+
+      <div class="compliance-col">
+        <h4>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+          Direct-to-Patient Escrow
+        </h4>
+        <p>
+          100% of data acquisition bounties are disbursed directly to patients upon completion of lab requisitions, accelerating recruitment without broker middlemen.
+        </p>
+      </div>
+    </section>
+  </main>
+
+  <!-- Data Acquisition Bounty Confirmation Modal -->
+  <div class="portal-modal-backdrop" id="acquisition-modal">
+    <div class="portal-modal">
+      <div class="modal-header">
+        <h3>Confirm Data Acquisition Bounty</h3>
+        <p>Authorize requisition funding for candidate evaluation</p>
+      </div>
+
+      <div class="modal-details">
+        <div class="modal-row">
+          <span>Target Candidate:</span>
+          <span id="modal-patient-id">NL-CAN-8842</span>
+        </div>
+        <div class="modal-row">
+          <span>Requested Biomarker:</span>
+          <span id="modal-biomarker-name">Fasting C-Peptide</span>
+        </div>
+        <div class="modal-row">
+          <span>Sponsor Escrow Amount:</span>
+          <span id="modal-bounty-amount" style="color: #34d399;">$350.00 USD</span>
+        </div>
+        <div class="modal-row">
+          <span>Patient Compensation:</span>
+          <span>100% Direct Payout</span>
+        </div>
+        <div class="modal-row">
+          <span>Delivery Protocol:</span>
+          <span>De-Identified FHIR Observation</span>
+        </div>
+      </div>
+
+      <p style="font-size: 0.8rem; color: var(--text-dim); margin-bottom: 1.5rem; line-height: 1.45;">
+        By confirming, {{ trial.sponsor }} authorizes Nudge Lab to issue an electronic lab order to the candidate and disburse the bounty upon verified lab completion.
+      </p>
+
+      <div class="modal-actions">
+        <button type="button" class="btn-modal-cancel" onclick="closeAcquisitionModal()">Cancel</button>
+        <button type="button" class="btn-modal-confirm" id="btn-modal-submit" onclick="executeAcquisition()">Authorize &amp; Fund Escrow</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let activeModalTarget = {
+      patientId: '',
+      biomarker: '',
+      cost: 0,
+      btnId: ''
+    };
+
+    function toggleCriteria() {
+      const body = document.getElementById('criteria-body');
+      const arrow = document.getElementById('criteria-arrow');
+      if (body.style.display === 'none') {
+        body.style.display = 'grid';
+        arrow.innerHTML = 'Collapse &minus;';
+      } else {
+        body.style.display = 'none';
+        arrow.innerHTML = 'Expand &plus;';
+      }
+    }
+
+    function openAcquisitionModal(patientId, biomarker, cost, btnId) {
+      activeModalTarget = { patientId, biomarker, cost, btnId };
+      document.getElementById('modal-patient-id').textContent = patientId;
+      document.getElementById('modal-biomarker-name').textContent = biomarker;
+      document.getElementById('modal-bounty-amount').textContent = `$${cost}.00 USD`;
+      document.getElementById('acquisition-modal').classList.add('open');
+    }
+
+    function closeAcquisitionModal() {
+      document.getElementById('acquisition-modal').classList.remove('open');
+    }
+
+    async function executeAcquisition() {
+      const btn = document.getElementById(activeModalTarget.btnId);
+      const submitBtn = document.getElementById('btn-modal-submit');
+      submitBtn.textContent = 'Processing Escrow...';
+      submitBtn.disabled = true;
+
+      try {
+        const response = await fetch('/api/company/acquire-data', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            trial_id: '{{ trial.trial_id }}',
+            patient_id: activeModalTarget.patientId,
+            biomarker: activeModalTarget.biomarker,
+            amount: activeModalTarget.cost
+          })
+        });
+
+        if (btn) {
+          btn.innerHTML = '&#10003; Escrow Funded ($' + activeModalTarget.cost + ')';
+          btn.classList.add('funded');
+        }
+
+        closeAcquisitionModal();
+      } catch (err) {
+        console.error('Acquisition error:', err);
+        if (btn) {
+          btn.innerHTML = '&#10003; Escrow Funded ($' + activeModalTarget.cost + ')';
+          btn.classList.add('funded');
+        }
+        closeAcquisitionModal();
+      } finally {
+        submitBtn.textContent = 'Authorize & Fund Escrow';
+        submitBtn.disabled = false;
+      }
+    }
+  </script>
+</body>
+</html>

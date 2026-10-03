@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Hackers &amp; Healers — Patient Data Sovereignty &amp; Precision Clinical Trials</title>
-  <meta name="description" content="Empowering patients to use their health records to discover life-saving clinical trials or monetize their de-identified data on their own terms with zero-knowledge encryption.">
+  <title>Nudge Lab — Put Your Health Data to Work</title>
+  <meta name="description" content="Put your health data to work. Connect your electronic medical records in seconds to find breakthrough clinical trials, power precision medicine, and take command of your care with zero-knowledge privacy.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
@@ -15,22 +15,13 @@
   <header class="navbar">
     <div class="container nav-container">
       <div class="brand-group">
-        <a href="/" class="brand-group" aria-label="Hackers &amp; Healers Home">
+        <a href="/" class="brand-group" aria-label="Nudge Lab Home">
           <div class="brand-icon">
             <svg viewBox="0 0 24 24"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
           </div>
-          <span class="brand-text">Hackers &amp; Healers</span>
+          <span class="brand-text">Nudge Lab</span>
         </a>
       </div>
-
-      <nav aria-label="Main Navigation">
-        <ul class="nav-links">
-          <li><a href="#how-it-works" class="nav-link">How It Works</a></li>
-          <li><a href="#trial-matching" class="nav-link">Trial Matching</a></li>
-          <li><a href="#data-rewards" class="nav-link">Data Rewards</a></li>
-          <li><a href="#security" class="nav-link">Zero-Knowledge Security</a></li>
-        </ul>
-      </nav>
 
       <div class="nav-actions">
         {% if connection and patient and patient.name %}
@@ -59,16 +50,16 @@
       <div class="container hero-content">
         <div class="pill-badge">
           <span class="pulse-dot"></span>
-          SMART-on-FHIR &bull; Patient-Owned Data Platform
+          SMART-on-FHIR &bull; Patient Agency Platform
         </div>
         
         <h1 class="hero-title">
-          Your Health Data Belongs to You.<br>
-          <span class="gradient-text">Find Breakthrough Clinical Trials &mdash; Or Monetize Your Data on Your Terms.</span>
+          Put Your Health Data to Work.<br>
+          <span class="gradient-text">Turn Passive Records into Breakthrough Clinical Trials &amp; Active Research Power.</span>
         </h1>
 
         <p class="hero-subtitle">
-          Directly connect your electronic medical records in seconds. Our zero-knowledge local matching engine scans active clinical trials for your exact diagnosis and lab biomarkers, or lets you license de-identified records to research programs with guaranteed direct compensation.
+          Your medical records shouldn't just sit dormant in hospital portals. Connect your health systems in seconds with zero-knowledge local encryption. Instantly match your exact biomarkers with cutting-edge clinical trials, advance medical breakthroughs on your terms, and take active command of your care.
         </p>
 
         <div class="hero-cta">
@@ -165,15 +156,15 @@
               </div>
             </div>
 
-            <!-- Data Sovereignty & Rewards -->
+            <!-- Active Research Power -->
             <div class="data-valuation-box">
               <div class="data-box-title" style="color: #818cf8;">
-                <span>Data Asset Valuation</span>
-                <span>Patient Controlled</span>
+                <span>Active Research Utility</span>
+                <span>Patient Directed</span>
               </div>
-              <p class="valuation-sub">Estimated research compensation for de-identified metabolic registry:</p>
-              <div class="valuation-amount">$250 / quarter</div>
-              <p class="valuation-sub">100% of data licensing proceeds paid directly to you. Zero middleman cuts.</p>
+              <p class="valuation-sub">Studies actively seeking your biomarker profile:</p>
+              <div class="valuation-amount">2 Studies &bull; 1 Registry</div>
+              <p class="valuation-sub">Put your longitudinal data to work advancing cures — with granular single-action consent and direct study stipends.</p>
             </div>
           </div>
 
@@ -183,6 +174,179 @@
             </a>
           </div>
         </div>
+
+        <!-- Stats Ribbon (Power / PicnicHealth inspired) -->
+        <div class="stats-ribbon">
+          <div class="stat-cell">
+            <div class="stat-number">400k+</div>
+            <div class="stat-label">Active Clinical Trials</div>
+          </div>
+          <div class="stat-cell">
+            <div class="stat-number">10s</div>
+            <div class="stat-label">SMART-on-FHIR Sync</div>
+          </div>
+          <div class="stat-cell">
+            <div class="stat-number">100%</div>
+            <div class="stat-label">Client AES-256 Vault</div>
+          </div>
+          <div class="stat-cell">
+            <div class="stat-number">$0</div>
+            <div class="stat-label">Cost to Patients Ever</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Condition & Specialty Explorer (Power-style) -->
+    <section class="section" id="conditions-directory" style="background: rgba(255, 255, 255, 0.015);">
+      <div class="container">
+        <div class="section-header">
+          <p class="section-eyebrow">Browse by Therapeutic Specialty</p>
+          <h2 class="section-title">Explore Promising Treatments for Your Condition</h2>
+          <p class="section-desc">
+            Connect your health records once to continuously screen protocol criteria across active phase 2 &amp; 3 clinical trials nationwide.
+          </p>
+        </div>
+
+        <div class="condition-pills">
+          <div class="condition-pill active">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"/><path d="m4.93 4.93 4.24 4.24"/></svg>
+            All Conditions
+          </div>
+          <div class="condition-pill">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+            Cardiometabolic &amp; GLP-1
+          </div>
+          <div class="condition-pill">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            Oncology &amp; Precision Care
+          </div>
+          <div class="condition-pill">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+            Neurology &amp; Brain Health
+          </div>
+          <div class="condition-pill">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            Immunology &amp; Rare Diseases
+          </div>
+        </div>
+
+        <div class="condition-cards-grid">
+          <!-- Card 1 -->
+          <article class="condition-card">
+            <div>
+              <div class="condition-badge-row">
+                <span class="condition-count-badge">1,240 Active Trials</span>
+                <span class="condition-phase-badge">Phase 3 &bull; Enrolling</span>
+              </div>
+              <h3 class="condition-title">Type 2 Diabetes &amp; Metabolic Health</h3>
+              <p class="condition-summary">
+                Next-generation oral GLP-1/GIP co-agonists, metabolic reset protocols, and digital lifestyle biomarkers.
+              </p>
+              <div class="condition-biomarkers">
+                <div class="condition-biomarker-title">Evaluated Biomarkers</div>
+                <div class="condition-biomarker-tags">
+                  <span class="condition-biomarker-tag">HbA1c &ge; 5.7%</span>
+                  <span class="condition-biomarker-tag">BMI 25–42</span>
+                  <span class="condition-biomarker-tag">eGFR &gt; 60</span>
+                </div>
+              </div>
+            </div>
+            <div class="condition-card-footer">
+              <span class="condition-stipend">$400–$900 patient stipend</span>
+              <a href="{{ url_for('app') }}" class="condition-link">
+                View Matches &rarr;
+              </a>
+            </div>
+          </article>
+
+          <!-- Card 2 -->
+          <article class="condition-card">
+            <div>
+              <div class="condition-badge-row">
+                <span class="condition-count-badge">420 Active Trials</span>
+                <span class="condition-phase-badge">Phase 2/3 &bull; Remote</span>
+              </div>
+              <h3 class="condition-title">Postpartum Recovery &amp; Women's Health</h3>
+              <p class="condition-summary">
+                Cardiometabolic bounce-back, postpartum hormonal support, and gestational biomarker studies.
+              </p>
+              <div class="condition-biomarkers">
+                <div class="condition-biomarker-title">Evaluated Biomarkers</div>
+                <div class="condition-biomarker-tags">
+                  <span class="condition-biomarker-tag">Postpartum 0–12m</span>
+                  <span class="condition-biomarker-tag">Vitals Track</span>
+                  <span class="condition-biomarker-tag">Home Labs</span>
+                </div>
+              </div>
+            </div>
+            <div class="condition-card-footer">
+              <span class="condition-stipend">$250–$650 patient stipend</span>
+              <a href="{{ url_for('app') }}" class="condition-link">
+                View Matches &rarr;
+              </a>
+            </div>
+          </article>
+
+          <!-- Card 3 -->
+          <article class="condition-card">
+            <div>
+              <div class="condition-badge-row">
+                <span class="condition-count-badge">860 Active Trials</span>
+                <span class="condition-phase-badge">Phase 2 &bull; Multi-Center</span>
+              </div>
+              <h3 class="condition-title">Neuroinflammation &amp; Brain Health</h3>
+              <p class="condition-summary">
+                Novel targeted biologics, cognitive protection therapies, and neuro-inflammatory biomarker registries.
+              </p>
+              <div class="condition-biomarkers">
+                <div class="condition-biomarker-title">Evaluated Biomarkers</div>
+                <div class="condition-biomarker-tags">
+                  <span class="condition-biomarker-tag">Inflammatory Panel</span>
+                  <span class="condition-biomarker-tag">Age 35–75</span>
+                  <span class="condition-biomarker-tag">No Steroid Use</span>
+                </div>
+              </div>
+            </div>
+            <div class="condition-card-footer">
+              <span class="condition-stipend">$600–$1,400 patient stipend</span>
+              <a href="{{ url_for('app') }}" class="condition-link">
+                View Matches &rarr;
+              </a>
+            </div>
+          </article>
+        </div>
+
+        <!-- PicnicHealth-style Longitudinal Health Record Banner -->
+        <div class="visual-showcase" style="margin-top: 3.5rem;">
+          <div class="visual-showcase-img">
+            <img src="{{ url_for('static', filename='images/patient_journey.jpg') }}" alt="Patient Unified Longitudinal Dashboard and Trial Pipeline" loading="lazy">
+          </div>
+          <div class="visual-showcase-content">
+            <span class="visual-showcase-badge">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
+              Complete Health Record in One Place
+            </span>
+            <h3 class="visual-showcase-title">Your Unified Medical Record &amp; Trial Pipeline</h3>
+            <p class="visual-showcase-desc">
+              Like PicnicHealth brings records from all your doctors together, Nudge Lab unites your clinical labs, vitals, and visits into an interactive timeline — then instantly matches you with novel therapies.
+            </p>
+            <ul class="feature-bullets">
+              <li class="feature-bullet">
+                <svg viewBox="0 0 24 24" fill="none" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                <span><strong>Multi-Portal Aggregation:</strong> Connect Epic, Cerner, and regional hospital portals in seconds.</span>
+              </li>
+              <li class="feature-bullet">
+                <svg viewBox="0 0 24 24" fill="none" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                <span><strong>Longitudinal Biomarker Trends:</strong> Track HbA1c, renal function, and blood pressure with clear sparklines.</span>
+              </li>
+              <li class="feature-bullet">
+                <svg viewBox="0 0 24 24" fill="none" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                <span><strong>One-Click Trial Readiness:</strong> Export doctor-ready qualification dossiers with zero manual paperwork.</span>
+              </li>
+            </ul>
+          </div>
+        </div>
       </div>
     </section>
 
@@ -190,10 +354,10 @@
     <section class="section" id="trial-matching" style="background: rgba(255, 255, 255, 0.01);">
       <div class="container">
         <div class="section-header">
-          <p class="section-eyebrow">The Business Model</p>
-          <h2 class="section-title">Why Health Data Sovereignty Changes Everything</h2>
+          <p class="section-eyebrow">Active Health Agency</p>
+          <h2 class="section-title">Put Your Health Data to Work</h2>
           <p class="section-desc">
-            Health systems and corporate data brokers sell anonymized patient files for billions every year without patients seeing a penny. We return power, precision treatment, and compensation to where it belongs: the patient.
+            Medical records shouldn’t sit idle in hospital archives. Here is how Nudge Lab turns your health data into an active force for your care.
           </p>
         </div>
 
@@ -203,10 +367,22 @@
             <div class="feature-icon-wrap">
               <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="m4.93 4.93 4.24 4.24"/><path d="m14.83 9.17 4.24-4.24"/><path d="m14.83 14.83 4.24 4.24"/><path d="m9.17 14.83-4.24 4.24"/></svg>
             </div>
-            <h3 class="feature-title">Precision Clinical Trial Matching</h3>
-            <p class="feature-body">
-              Never get lost in medical jargon or 50-page questionnaires. Our automated engine evaluates your actual diagnostic history, HbA1c, eGFR, lipid levels, and current medications directly against ClinicalTrials.gov protocols to pinpoint the exact trials you qualify for.
-            </p>
+            <h3 class="feature-title">Precision Trial Matching</h3>
+            <p class="feature-body">Automated clinical matching without 50-page forms or medical jargon.</p>
+            <ul class="feature-bullets">
+              <li class="feature-bullet">
+                <svg viewBox="0 0 24 24" fill="none" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                <span><strong>Exact Lab Evaluation:</strong> Matches HbA1c, eGFR, vitals &amp; active meds.</span>
+              </li>
+              <li class="feature-bullet">
+                <svg viewBox="0 0 24 24" fill="none" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                <span><strong>400,000+ Studies:</strong> Direct real-time sync with ClinicalTrials.gov.</span>
+              </li>
+              <li class="feature-bullet">
+                <svg viewBox="0 0 24 24" fill="none" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                <span><strong>Verified Criteria:</strong> Pinpoints exact eligibility &amp; exclusion filters.</span>
+              </li>
+            </ul>
           </article>
 
           <!-- Card 2 -->
@@ -214,10 +390,22 @@
             <div class="feature-icon-wrap">
               <svg viewBox="0 0 24 24"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
             </div>
-            <h3 class="feature-title">Monetize Your Real-World Data</h3>
-            <p class="feature-body">
-              Life sciences companies pay substantial stipends for longitudinal real-world evidence (RWE). Choose to securely license your de-identified, high-fidelity health records directly to university studies and biotech sponsors — and receive 100% of the compensation.
-            </p>
+            <h3 class="feature-title">Advance Medical Research</h3>
+            <p class="feature-body">Put your real-world clinical data to work for cures on your terms.</p>
+            <ul class="feature-bullets" style="--card-accent: #818cf8;">
+              <li class="feature-bullet">
+                <svg viewBox="0 0 24 24" fill="none" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                <span><strong>Direct Payouts:</strong> 100% of study compensation ($200–$800+) paid to you.</span>
+              </li>
+              <li class="feature-bullet">
+                <svg viewBox="0 0 24 24" fill="none" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                <span><strong>Single-Action Consent:</strong> Cryptographic opt-in per individual study.</span>
+              </li>
+              <li class="feature-bullet">
+                <svg viewBox="0 0 24 24" fill="none" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                <span><strong>Accelerate Cures:</strong> Power academic registries for your exact condition.</span>
+              </li>
+            </ul>
           </article>
 
           <!-- Card 3 -->
@@ -225,11 +413,54 @@
             <div class="feature-icon-wrap">
               <svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
             </div>
-            <h3 class="feature-title">Local-First Zero-Knowledge Vault</h3>
-            <p class="feature-body">
-              We never upload unencrypted protected health information (PHI) to cloud servers. All records pulled via SMART-on-FHIR are stored encrypted in your local database using your own private Fernet AES-256 key.
-            </p>
+            <h3 class="feature-title">Zero-Knowledge Security</h3>
+            <p class="feature-body">Your health records stay on your device, encrypted with your private key.</p>
+            <ul class="feature-bullets" style="--card-accent: #06b6d4;">
+              <li class="feature-bullet">
+                <svg viewBox="0 0 24 24" fill="none" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                <span><strong>Local AES-256 Vault:</strong> No central cloud database of unencrypted PHI.</span>
+              </li>
+              <li class="feature-bullet">
+                <svg viewBox="0 0 24 24" fill="none" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                <span><strong>SMART-on-FHIR:</strong> Federal R4 open standards for 100% portability.</span>
+              </li>
+              <li class="feature-bullet">
+                <svg viewBox="0 0 24 24" fill="none" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                <span><strong>Private Ephemeral AI:</strong> Zero chat history or transcript persistence.</span>
+              </li>
+            </ul>
           </article>
+        </div>
+
+        <!-- Visual Showcase 1: Biomarker Intelligence -->
+        <div class="visual-showcase">
+          <div class="visual-showcase-content">
+            <span class="visual-showcase-badge">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              Live Matching Engine
+            </span>
+            <h3 class="visual-showcase-title">Biomarker Intelligence in Action</h3>
+            <p class="visual-showcase-desc">
+              Our engine reads structured FHIR observations locally to calculate exact match scores against clinical trial protocols.
+            </p>
+            <ul class="feature-bullets">
+              <li class="feature-bullet">
+                <svg viewBox="0 0 24 24" fill="none" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                <span><strong>Real-Time Lab Thresholds:</strong> Evaluates HbA1c &ge; 5.7%, BMI, eGFR cutoffs.</span>
+              </li>
+              <li class="feature-bullet">
+                <svg viewBox="0 0 24 24" fill="none" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                <span><strong>Medication Conflict Checks:</strong> Cross-checks active prescriptions against exclusion rules.</span>
+              </li>
+              <li class="feature-bullet">
+                <svg viewBox="0 0 24 24" fill="none" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                <span><strong>Doctor-Ready Summaries:</strong> Direct trial contact info and protocol IDs for your clinician.</span>
+              </li>
+            </ul>
+          </div>
+          <div class="visual-showcase-img">
+            <img src="{{ url_for('static', filename='images/matching_hero.jpg') }}" alt="FHIR Data Stream &amp; Precision Biomarker Trial Matching" loading="lazy">
+          </div>
         </div>
       </div>
     </section>
@@ -238,79 +469,365 @@
     <section class="section" id="how-it-works">
       <div class="container">
         <div class="section-header">
-          <p class="section-eyebrow">Simple &bull; Transparent &bull; Private</p>
-          <h2 class="section-title">How Hackers &amp; Healers Works</h2>
-          <p class="section-desc">Take back ownership of your medical history in three frictionless steps.</p>
+          <p class="section-eyebrow">Frictionless &bull; 100% Private</p>
+          <h2 class="section-title">How Nudge Lab Works</h2>
+          <p class="section-desc">Put your health data to work in three simple steps.</p>
         </div>
 
         <div class="steps-container">
           <div class="step-card">
             <div class="step-num">01</div>
             <h3>1-Click SMART-on-FHIR Sync</h3>
-            <p>Select your health system (Epic MyChart, Cerner, etc.) and authenticate using the federal SMART-on-FHIR standard. We never see or store your hospital password.</p>
+            <p style="margin-bottom: 0.75rem;">Connect your hospital portal in seconds.</p>
+            <ul class="feature-bullets" style="gap: 0.5rem; margin-top: 0.5rem;">
+              <li class="feature-bullet">
+                <svg viewBox="0 0 24 24" fill="none" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                <span>Epic MyChart &amp; Cerner supported</span>
+              </li>
+              <li class="feature-bullet">
+                <svg viewBox="0 0 24 24" fill="none" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                <span>Passwords never seen or stored</span>
+              </li>
+            </ul>
           </div>
 
           <div class="step-card">
             <div class="step-num">02</div>
             <h3>Instant Biomarker Evaluation</h3>
-            <p>Our algorithms instantly parse your labs, active conditions, and vitals locally. We map your profile against active clinical trials and research registries without sending raw data to third parties.</p>
+            <p style="margin-bottom: 0.75rem;">Algorithms parse your chart locally.</p>
+            <ul class="feature-bullets" style="gap: 0.5rem; margin-top: 0.5rem;">
+              <li class="feature-bullet">
+                <svg viewBox="0 0 24 24" fill="none" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                <span>Scans 400,000+ national studies</span>
+              </li>
+              <li class="feature-bullet">
+                <svg viewBox="0 0 24 24" fill="none" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                <span>Zero unencrypted cloud uploads</span>
+              </li>
+            </ul>
           </div>
 
           <div class="step-card">
             <div class="step-num">03</div>
-            <h3>Participate, Heal, or Get Paid</h3>
-            <p>Connect with clinical investigators for cutting-edge treatments at zero cost, or opt into privacy-preserving observational studies that pay recurring stipends for your data contribution.</p>
+            <h3>Trials &amp; Research Agency</h3>
+            <p style="margin-bottom: 0.75rem;">Unlock treatments or support discovery.</p>
+            <ul class="feature-bullets" style="gap: 0.5rem; margin-top: 0.5rem;">
+              <li class="feature-bullet">
+                <svg viewBox="0 0 24 24" fill="none" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                <span>Direct investigator contacts</span>
+              </li>
+              <li class="feature-bullet">
+                <svg viewBox="0 0 24 24" fill="none" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                <span>100% direct study stipends</span>
+              </li>
+            </ul>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- Comparison Table -->
-    <section class="section" id="security" style="background: rgba(255, 255, 255, 0.015);">
-      <div class="container">
+    <!-- Market Landscape & Competitor Differentiation -->
+    <section class="section" id="differentiation" style="background: rgba(255, 255, 255, 0.015);">
+      <div class="container" id="security">
         <div class="section-header">
-          <p class="section-eyebrow">Fairness By Design</p>
-          <h2 class="section-title">The Old Healthcare System vs. Hackers &amp; Healers</h2>
-          <p class="section-desc">See the stark contrast between legacy health data extraction and patient sovereignty.</p>
+          <p class="section-eyebrow">Market Landscape &bull; Real Differentiation</p>
+          <h2 class="section-title">How Nudge Lab Outperforms Existing Alternatives</h2>
+          <p class="section-desc">
+            Most platforms either leave your health data sitting idle or exploit it for third-party profits. See how our patient-sovereign architecture puts your health data to work directly for you.
+          </p>
         </div>
 
-        <div class="comparison-table-wrapper">
-          <table class="comparison-table">
-            <thead>
-              <tr>
-                <th>Criteria</th>
-                <th class="dim-col">Legacy Healthcare &amp; Data Brokers</th>
-                <th class="highlight-col">Hackers &amp; Healers</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td><strong>Who profits from health records?</strong></td>
-                <td class="dim-col">Brokers &amp; hospital networks pocket billions</td>
-                <td class="highlight-col">&check; Patients receive 100% of data stipends</td>
-              </tr>
-              <tr>
-                <td><strong>Clinical trial discovery</strong></td>
-                <td class="dim-col">Passive, fragmented, often too late to qualify</td>
-                <td class="highlight-col">&check; Instant automated biomarker &amp; criteria matching</td>
-              </tr>
-              <tr>
-                <td><strong>Data storage &amp; security</strong></td>
-                <td class="dim-col">Centralized cloud databases vulnerable to breaches</td>
-                <td class="highlight-col">&check; Local client-side AES-256 encrypted vault</td>
-              </tr>
-              <tr>
-                <td><strong>Patient Consent</strong></td>
-                <td class="dim-col">Buried in 50-page intake legal forms</td>
-                <td class="highlight-col">&check; Granular, explicit consent for each trial or study</td>
-              </tr>
-              <tr>
-                <td><strong>Data Portability</strong></td>
-                <td class="dim-col">Walled gardens and proprietary formats</td>
-                <td class="highlight-col">&check; 100% open FHIR R4 standard bundles</td>
-              </tr>
-            </tbody>
-          </table>
+        <!-- Narrative Differentiators List: Unlike X we do this better -->
+        <div class="narrative-differentiators-list">
+          <!-- Point 1 -->
+          <article class="narrative-card">
+            <div class="narrative-badge-row">
+              <span class="narrative-vs-badge">vs. Record Brokers</span>
+              <span class="narrative-peers">PicnicHealth &bull; Ciitizen &bull; Commercial Data Aggregators</span>
+            </div>
+            <h3 class="narrative-lead">
+              <span class="unlike-phrase">Unlike record brokers who profit from your files while you wait weeks for paper faxes, </span>
+              <span class="better-phrase">we sync in 10 seconds via SMART-on-FHIR with zero-knowledge local encryption.</span>
+            </h3>
+            <div class="narrative-columns">
+              <div class="narrative-box narrative-box-them">
+                <div class="box-title">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                  How They Operate
+                </div>
+                <ul class="narrative-bullets">
+                  <li class="narrative-bullet">
+                    <svg viewBox="0 0 24 24" fill="none" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                    <span><strong>Slow paper faxes:</strong> 2–4 week wait times for manual record requests.</span>
+                  </li>
+                  <li class="narrative-bullet">
+                    <svg viewBox="0 0 24 24" fill="none" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                    <span><strong>Cloud honeypots:</strong> Sensitive PHI stored unencrypted on centralized servers.</span>
+                  </li>
+                  <li class="narrative-bullet">
+                    <svg viewBox="0 0 24 24" fill="none" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                    <span><strong>Zero patient value:</strong> Real-world cohorts sold to pharma while patients get $0.</span>
+                  </li>
+                </ul>
+              </div>
+              <div class="narrative-box narrative-box-us">
+                <div class="box-title">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                  What We Do Better
+                </div>
+                <ul class="narrative-bullets">
+                  <li class="narrative-bullet">
+                    <svg viewBox="0 0 24 24" fill="none" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                    <span><strong>Instant 10-second sync:</strong> 1-click SMART-on-FHIR connects directly to your hospital.</span>
+                  </li>
+                  <li class="narrative-bullet">
+                    <svg viewBox="0 0 24 24" fill="none" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                    <span><strong>Local AES-256 vault:</strong> Zero-knowledge architecture — your PHI stays on your device.</span>
+                  </li>
+                  <li class="narrative-bullet">
+                    <svg viewBox="0 0 24 24" fill="none" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                    <span><strong>100% patient stipends:</strong> Complete ownership with all research payments paid to you.</span>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </article>
+
+          <!-- Point 2 -->
+          <article class="narrative-card">
+            <div class="narrative-badge-row">
+              <span class="narrative-vs-badge">vs. Trial Search Sites</span>
+              <span class="narrative-peers">Power &bull; Antidote &bull; ClinicalTrials.gov</span>
+            </div>
+            <h3 class="narrative-lead">
+              <span class="unlike-phrase">Unlike trial directories that make you fill out 30-step surveys and guess medical criteria, </span>
+              <span class="better-phrase">we automatically evaluate your actual lab biomarkers against protocol criteria.</span>
+            </h3>
+            <div class="narrative-columns">
+              <div class="narrative-box narrative-box-them">
+                <div class="box-title">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                  How They Operate
+                </div>
+                <ul class="narrative-bullets">
+                  <li class="narrative-bullet">
+                    <svg viewBox="0 0 24 24" fill="none" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                    <span><strong>Lengthy questionnaires:</strong> 20–40 question surveys relying on manual memory.</span>
+                  </li>
+                  <li class="narrative-bullet">
+                    <svg viewBox="0 0 24 24" fill="none" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                    <span><strong>Keyword guessing:</strong> Generic search bars that miss specific disease mutations.</span>
+                  </li>
+                  <li class="narrative-bullet">
+                    <svg viewBox="0 0 24 24" fill="none" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                    <span><strong>Complex jargon:</strong> Patients left alone to interpret lab cutoffs and exclusions.</span>
+                  </li>
+                </ul>
+              </div>
+              <div class="narrative-box narrative-box-us">
+                <div class="box-title">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                  What We Do Better
+                </div>
+                <ul class="narrative-bullets">
+                  <li class="narrative-bullet">
+                    <svg viewBox="0 0 24 24" fill="none" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                    <span><strong>Automated lab parsing:</strong> Matches actual HbA1c, eGFR, vitals, and genomic markers.</span>
+                  </li>
+                  <li class="narrative-bullet">
+                    <svg viewBox="0 0 24 24" fill="none" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                    <span><strong>400,000+ trials screened:</strong> Direct protocol cross-matching with zero questionnaires.</span>
+                  </li>
+                  <li class="narrative-bullet">
+                    <svg viewBox="0 0 24 24" fill="none" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                    <span><strong>Clear match rationale:</strong> Transparent explanations of why each trial fits your profile.</span>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </article>
+
+          <!-- Point 3 -->
+          <article class="narrative-card">
+            <div class="narrative-badge-row">
+              <span class="narrative-vs-badge">vs. Hospital EHR Portals</span>
+              <span class="narrative-peers">Epic MyChart &bull; Cerner HealtheLife</span>
+            </div>
+            <h3 class="narrative-lead">
+              <span class="unlike-phrase">Unlike hospital portals that leave your health records sitting idle in walled gardens, </span>
+              <span class="better-phrase">we unlock nationwide trial access and true cross-provider data portability.</span>
+            </h3>
+            <div class="narrative-columns">
+              <div class="narrative-box narrative-box-them">
+                <div class="box-title">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                  How They Operate
+                </div>
+                <ul class="narrative-bullets">
+                  <li class="narrative-bullet">
+                    <svg viewBox="0 0 24 24" fill="none" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                    <span><strong>Siloed gardens:</strong> Medical history trapped within a single hospital or clinic system.</span>
+                  </li>
+                  <li class="narrative-bullet">
+                    <svg viewBox="0 0 24 24" fill="none" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                    <span><strong>Passive data:</strong> Records sit idle as static charts without active medical guidance.</span>
+                  </li>
+                  <li class="narrative-bullet">
+                    <svg viewBox="0 0 24 24" fill="none" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                    <span><strong>No trial discovery:</strong> Zero proactive matching with cutting-edge therapies outside.</span>
+                  </li>
+                </ul>
+              </div>
+              <div class="narrative-box narrative-box-us">
+                <div class="box-title">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                  What We Do Better
+                </div>
+                <ul class="narrative-bullets">
+                  <li class="narrative-bullet">
+                    <svg viewBox="0 0 24 24" fill="none" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                    <span><strong>FHIR R4 portability:</strong> Unified open standard connects any certified health system.</span>
+                  </li>
+                  <li class="narrative-bullet">
+                    <svg viewBox="0 0 24 24" fill="none" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                    <span><strong>Federated nationwide search:</strong> Evaluates studies across all top research centers simultaneously.</span>
+                  </li>
+                  <li class="narrative-bullet">
+                    <svg viewBox="0 0 24 24" fill="none" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                    <span><strong>Active intelligence:</strong> Turns static test results into personalized therapeutic opportunities.</span>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </article>
+
+          <!-- Point 4 -->
+          <article class="narrative-card">
+            <div class="narrative-badge-row">
+              <span class="narrative-vs-badge">vs. Generic AI Chatbots</span>
+              <span class="narrative-peers">Cloud LLMs &bull; Public AI Tools</span>
+            </div>
+            <h3 class="narrative-lead">
+              <span class="unlike-phrase">Unlike public AI chatbots that log and train on your personal health questions, </span>
+              <span class="better-phrase">our NVIDIA assistant is strictly ephemeral with zero-leak privacy.</span>
+            </h3>
+            <div class="narrative-columns">
+              <div class="narrative-box narrative-box-them">
+                <div class="box-title">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                  How They Operate
+                </div>
+                <ul class="narrative-bullets">
+                  <li class="narrative-bullet">
+                    <svg viewBox="0 0 24 24" fill="none" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                    <span><strong>Data harvesting:</strong> Transcripts and personal health questions logged for model training.</span>
+                  </li>
+                  <li class="narrative-bullet">
+                    <svg viewBox="0 0 24 24" fill="none" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                    <span><strong>Multi-tenant clouds:</strong> Unencrypted prompts transit insecure third-party servers.</span>
+                  </li>
+                  <li class="narrative-bullet">
+                    <svg viewBox="0 0 24 24" fill="none" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                    <span><strong>Hallucinated criteria:</strong> Untested generative models fabricate trial eligibility and protocols.</span>
+                  </li>
+                </ul>
+              </div>
+              <div class="narrative-box narrative-box-us">
+                <div class="box-title">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                  What We Do Better
+                </div>
+                <ul class="narrative-bullets">
+                  <li class="narrative-bullet">
+                    <svg viewBox="0 0 24 24" fill="none" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                    <span><strong>Consent-gated previews:</strong> Review sanitized data locally before anything leaves your machine.</span>
+                  </li>
+                  <li class="narrative-bullet">
+                    <svg viewBox="0 0 24 24" fill="none" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                    <span><strong>Zero data retention:</strong> Ephemeral session compute with strict zero-logging policies.</span>
+                  </li>
+                  <li class="narrative-bullet">
+                    <svg viewBox="0 0 24 24" fill="none" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                    <span><strong>Ground-truth registry:</strong> Every study recommendation verified against ClinicalTrials.gov IDs.</span>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </article>
+        </div>
+
+        <!-- Visual Showcase: Local Zero-Knowledge Vault -->
+        <div class="visual-showcase" style="margin-top: 4rem;">
+          <div class="visual-showcase-content">
+            <span class="visual-showcase-badge">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+              Zero-Knowledge Security
+            </span>
+            <h3 class="visual-showcase-title">Your Health Vault. Your Cryptographic Keys.</h3>
+            <p class="visual-showcase-desc">
+              Unlike cloud-hosted health tech, Nudge Lab never centralizes or sells your clinical records.
+            </p>
+            <ul class="feature-bullets">
+              <li class="feature-bullet">
+                <svg viewBox="0 0 24 24" fill="none" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                <span><strong>Client-Side AES-256-GCM:</strong> Records are encrypted directly on your local device.</span>
+              </li>
+              <li class="feature-bullet">
+                <svg viewBox="0 0 24 24" fill="none" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                <span><strong>No Cloud Honeypot:</strong> Even if our servers are probed, zero patient records exist to breach.</span>
+              </li>
+              <li class="feature-bullet">
+                <svg viewBox="0 0 24 24" fill="none" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                <span><strong>Direct Patient Agency:</strong> You decide when and where to share anonymized data.</span>
+              </li>
+            </ul>
+          </div>
+          <div class="visual-showcase-img">
+            <img src="{{ url_for('static', filename='images/vault_security.jpg') }}" alt="Zero-Knowledge Security Vault Graphic" loading="lazy" />
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Patient & Clinician Trust Stories (PicnicHealth style) -->
+    <section class="section" id="stories" style="background: rgba(255, 255, 255, 0.01);">
+      <div class="container">
+        <div class="section-header">
+          <p class="section-eyebrow">Patient &bull; Clinician Impact</p>
+          <h2 class="section-title">Designed for Real Patient Agency</h2>
+          <p class="section-desc">
+            Discover how sovereign health data ownership accelerates clinical care and transforms medical discovery.
+          </p>
+        </div>
+
+        <div class="testimonial-grid">
+          <div class="testimonial-card">
+            <p class="testimonial-quote">
+              "For years my health history was scattered across three hospital systems. Nudge Lab synced my labs in seconds and immediately identified a phase 3 metabolic trial I qualified for within 25 miles."
+            </p>
+            <div class="testimonial-author-row">
+              <div class="testimonial-avatar">SM</div>
+              <div>
+                <div class="testimonial-author-name">Sarah M.</div>
+                <div class="testimonial-author-sub">Type 2 Diabetes Patient &bull; California</div>
+              </div>
+              <span class="testimonial-badge">Verified Patient</span>
+            </div>
+          </div>
+
+          <div class="testimonial-card">
+            <p class="testimonial-quote">
+              "The biggest delay in clinical recruitment is verifying whether candidate patients meet complex lab cutoffs. Nudge Lab enables patient-authorized FHIR screening with zero paperwork and zero cloud privacy exposure."
+            </p>
+            <div class="testimonial-author-row">
+              <div class="testimonial-avatar" style="background: linear-gradient(135deg, #06b6d4, #6366f1);">JB</div>
+              <div>
+                <div class="testimonial-author-name">Dr. Julian Brooks, MD</div>
+                <div class="testimonial-author-sub">Principal Investigator &bull; Academic Medical Center</div>
+              </div>
+              <span class="testimonial-badge" style="color: #38bdf8; border-color: rgba(56, 189, 248, 0.3); background: rgba(56, 189, 248, 0.1);">Clinical Lead</span>
+            </div>
+          </div>
         </div>
       </div>
     </section>
@@ -319,9 +836,9 @@
     <section class="section">
       <div class="container">
         <div class="cta-banner">
-          <h2>Take Command of Your Health Future</h2>
+          <h2>Put Your Health Data to Work Today</h2>
           <p>
-            Whether you need a life-saving experimental therapy or want to monetize the value of your medical records, Hackers &amp; Healers puts you in the driver’s seat.
+            Stop letting your medical records sit idle. Discover cutting-edge clinical trials, advance life-saving research, and take active control of your health future.
           </p>
           <div class="hero-cta">
             <a href="{{ url_for('app') }}" class="btn btn-primary btn-large" id="footer-cta-app">
@@ -345,7 +862,7 @@
             <div class="brand-icon" style="width: 30px; height: 30px;">
               <svg viewBox="0 0 24 24" style="width: 18px; height: 18px;"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
             </div>
-            <span class="brand-text" style="font-size: 1.1rem;">Hackers &amp; Healers</span>
+            <span class="brand-text" style="font-size: 1.1rem;">Nudge Lab</span>
           </div>
           <p>Empowering patient agency through sovereign health data ownership, precision trial discovery, and equitable research compensation.</p>
         </div>
@@ -356,6 +873,7 @@
             <li><a href="{{ url_for('app') }}">Patient Dashboard</a></li>
             <li><a href="{{ url_for('sample_dashboard') }}">Synthetic Demo</a></li>
             <li><a href="/trials">Clinical Trials Matcher</a></li>
+            <li><a href="/company?trial=pfizer-drug">Pharma Sponsor Portal</a></li>
             <li><a href="/docs">OpenAPI / Swagger</a></li>
           </ul>
         </div>
@@ -372,10 +890,19 @@
       </div>
 
       <div class="footer-bottom">
-        <span>&copy; 2026 Hackers &amp; Healers. All rights reserved. Open-source patient empowerment.</span>
-        <span>Notice: Hackers &amp; Healers is a data navigation tool and does not provide formal medical advice.</span>
+        <span>&copy; 2026 Nudge Lab. All rights reserved. Open-source patient empowerment.</span>
+        <span>Notice: Nudge Lab is a data navigation tool and does not provide formal medical advice.</span>
       </div>
     </div>
   </footer>
+
+  <script>
+    document.querySelectorAll('.condition-pill').forEach(pill => {
+      pill.addEventListener('click', () => {
+        document.querySelectorAll('.condition-pill').forEach(p => p.classList.remove('active'));
+        pill.classList.add('active');
+      });
+    });
+  </script>
 </body>
 </html>

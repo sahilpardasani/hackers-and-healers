@@ -11,7 +11,7 @@ npm install
 npm run dev
 
 
-# Hackers & Healers
+# Nudge Lab
 
 A local-first SMART on FHIR sync demo inspired by [FHIR_EPIC](https://github.com/narges-rzv/FHIR_EPIC). A patient connects through their health system's own sign-in and consent page. The app then syncs patient demographics, labs, vital signs, conditions, medication requests when enabled, appointments, and coverage; follows FHIR pagination links; stores records encrypted on the local machine; and displays them in a CKM-oriented dashboard.
 
