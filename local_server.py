@@ -26,7 +26,7 @@ class _DeferredHandshakeContext(ssl.SSLContext):
         return super().wrap_socket(sock, *args, **kwargs)
 
 
-def server_options(redirect_uri: str, cert_dir: Path | None = None) -> dict:
+def server_options(redirect_uri: str, cert_dir: Path | None = None, use_ssl: bool = True) -> dict:
     """Serve the same scheme/port as the registered callback, on loopback only.
 
     The self-signed certificate is for local testing. It is kept across restarts
@@ -40,7 +40,7 @@ def server_options(redirect_uri: str, cert_dir: Path | None = None) -> dict:
             or uri.username is not None or uri.password is not None):
         raise ValueError("This local demo requires REDIRECT_URI=http(s)://127.0.0.1:<port>/callback.")
     options = {"host": "127.0.0.1", "port": uri.port or (443 if uri.scheme == "https" else 80)}
-    if uri.scheme == "http":
+    if uri.scheme == "http" or not use_ssl:
         return options
 
     directory = cert_dir or Path(__file__).resolve().parent / "data" / "local-tls"
@@ -73,4 +73,7 @@ def server_options(redirect_uri: str, cert_dir: Path | None = None) -> dict:
     context.minimum_version = ssl.TLSVersion.TLSv1_2
     context.load_cert_chain(cert_path, key_path)
     options["ssl_context"] = context
+    options["ssl_certfile"] = str(cert_path)
+    options["ssl_keyfile"] = str(key_path)
     return options
+

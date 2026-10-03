@@ -18,7 +18,8 @@ import time
 from datetime import date
 
 import requests
-from flask import Blueprint, jsonify, redirect, request
+from fastapi import APIRouter, Request
+from fastapi.responses import JSONResponse, RedirectResponse
 
 import storage
 from sample_data import SAMPLE_NAMESPACE
@@ -501,20 +502,21 @@ def stored_profile(source="connected") -> dict | None:
 
 # --- HTTP routes ------------------------------------------------------------------
 
-trials = Blueprint("trials", __name__)
+router = APIRouter()
+trials = router  # Backwards compatibility alias
 CORS_ORIGINS = {item.strip() for item in os.getenv("TRIALS_CORS_ORIGINS", "").split(",") if item.strip()}
 
 
-@trials.after_request
-def _cors(response):
-    response.headers["Cache-Control"] = "no-store"
-    origin = request.headers.get("Origin")
+def trial_json(data: dict, status_code: int = 200, origin: str | None = None) -> JSONResponse:
+    res = JSONResponse(content=data, status_code=status_code)
+    res.headers["Cache-Control"] = "no-store"
     if origin and origin in CORS_ORIGINS:
-        response.headers["Access-Control-Allow-Origin"] = origin
-        response.headers["Access-Control-Allow-Headers"] = "Content-Type"
-        response.headers["Access-Control-Allow-Methods"] = "GET, POST, OPTIONS"
-        response.headers["Vary"] = "Origin"
-    return response
+        res.headers["Access-Control-Allow-Origin"] = origin
+        res.headers["Access-Control-Allow-Headers"] = "Content-Type"
+        res.headers["Access-Control-Allow-Methods"] = "GET, POST, OPTIONS"
+        res.headers["Vary"] = "Origin"
+    return res
+
 
 
 def _geo_from(source) -> tuple[float, float, float] | None:
@@ -552,70 +554,85 @@ def _profile_from_body(body: dict) -> dict:
     return profile
 
 
-def _run(profile: dict | None, geo, include_ineligible: bool):
+def _run(profile: dict | None, geo, include_ineligible: bool, origin: str | None = None):
     if not profile:
-        return jsonify(error="No synced patient data yet. Connect and sync a health record first."), 404
+        return trial_json({"error": "No synced patient data yet. Connect and sync a health record first."}, 404, origin)
     if not profile["conditions"]:
-        return jsonify(profile=profile, trials=[], note="No active conditions found to search for."), 200
+        return trial_json({"profile": profile, "trials": [], "note": "No active conditions found to search for."}, 200, origin)
     try:
         results = find_trials(profile, geo=geo, include_ineligible=include_ineligible)
     except (requests.RequestException, ValueError):
-        return jsonify(error="ClinicalTrials.gov could not be reached. Try again shortly."), 502
-    return jsonify(profile=profile, searches=planned_searches(profile, geo), trials=results), 200
+        return trial_json({"error": "ClinicalTrials.gov could not be reached. Try again shortly."}, 502, origin)
+    return trial_json({"profile": profile, "searches": planned_searches(profile, geo), "trials": results}, 200, origin)
 
 
-@trials.errorhandler(ValueError)
-def invalid_input(error):
-    return jsonify(error=str(error)), 400
-
-
-@trials.get("/api/trials/profile")
-def api_profile():
-    profile = stored_profile(request.args.get("source", "connected"))
+@router.get("/api/trials/profile")
+def api_profile(request: Request, source: str = "connected"):
+    origin = request.headers.get("origin")
+    profile = stored_profile(source)
     if profile is None:
-        return jsonify(error="No records for this source. Connect and sync, or load the fictional sample."), 404
-    return jsonify(profile=profile, searches=planned_searches(profile))
+        return trial_json({"error": "No records for this source. Connect and sync, or load the fictional sample."}, 404, origin)
+    return trial_json({"profile": profile, "searches": planned_searches(profile)}, origin=origin)
 
 
-@trials.get("/api/trials")
-def api_trials():
+@router.get("/api/trials")
+def api_trials(request: Request, source: str = "connected", consent: str = None, lat: str = None, lon: str = None, miles: str = None, all: str = None):
     """Match the locally synced patient. Optional query: lat, lon, miles, all=1."""
-    if request.args.get("consent") != "yes":
-        return jsonify(error="Confirm sharing the displayed search topics with ClinicalTrials.gov first."), 400
-    return _run(stored_profile(request.args.get("source", "connected")), _geo_from(request.args), request.args.get("all") == "1")
+    origin = request.headers.get("origin")
+    if consent != "yes":
+        return trial_json({"error": "Confirm sharing the displayed search topics with ClinicalTrials.gov first."}, 400, origin)
+    geo_dict = {"lat": lat, "lon": lon, "miles": miles}
+    try:
+        geo = _geo_from(geo_dict)
+    except ValueError as exc:
+        return trial_json({"error": str(exc)}, 400, origin)
+    return _run(stored_profile(source), geo, all == "1", origin)
 
 
-@trials.post("/api/trials/match")
-def api_match():
-    """Match FHIR records or a simple profile sent by a frontend.
-
-    Body is either FHIR ({"resourceType": "Bundle", ...} or {"resources": [...]}) or a profile:
-    {age, sex, conditions: [..], labs: {egfr, a1c, bmi, systolic}}. Optional lat, lon, miles, all
-    go in the body or the query string.
-    """
-    body = request.get_json(silent=True)
+@router.post("/api/trials/match")
+async def api_match(request: Request):
+    """Match FHIR records or a simple profile sent by a frontend."""
+    origin = request.headers.get("origin")
+    try:
+        body = await request.json()
+    except Exception:
+        body = None
     if not isinstance(body, (dict, list)):
-        return jsonify(error="Provide a FHIR Bundle, resource list, or profile JSON."), 400
-    profile = profile_from_json(body)
+        return trial_json({"error": "Provide a FHIR Bundle, resource list, or profile JSON."}, 400, origin)
+    try:
+        profile = profile_from_json(body)
+    except ValueError as exc:
+        return trial_json({"error": str(exc)}, 400, origin)
     options = body if isinstance(body, dict) else {}
-    geo = _geo_from(options) or _geo_from(request.args)
-    return _run(profile, geo, options.get("all") is True or request.args.get("all") == "1")
+    try:
+        geo = _geo_from(options) or _geo_from(dict(request.query_params))
+    except ValueError as exc:
+        return trial_json({"error": str(exc)}, 400, origin)
+    return _run(profile, geo, options.get("all") is True or request.query_params.get("all") == "1", origin)
 
 
-@trials.get("/api/trials/<nct_id>")
-def api_trial(nct_id: str):
+@router.get("/api/trials/{nct_id}")
+def api_trial(nct_id: str, request: Request, source: str = "connected"):
+    origin = request.headers.get("origin")
     try:
         study = get_study(nct_id.upper())
     except ValueError as exc:
-        return jsonify(error=str(exc)), 400
+        return trial_json({"error": str(exc)}, 400, origin)
     except requests.HTTPError as exc:
         status = exc.response.status_code if exc.response is not None else 502
-        return jsonify(error="Study not found." if status == 404 else "ClinicalTrials.gov request failed."), 404 if status == 404 else 502
+        return trial_json({"error": "Study not found." if status == 404 else "ClinicalTrials.gov request failed."}, 404 if status == 404 else 502, origin)
     except requests.RequestException:
-        return jsonify(error="ClinicalTrials.gov could not be reached. Try again shortly."), 502
-    profile = stored_profile(request.args.get("source", "connected"))
-    return jsonify(trial=summarize_study(study, _geo_from(request.args)),
-                   match=match_study(study, profile) if profile else None)
+        return trial_json({"error": "ClinicalTrials.gov could not be reached. Try again shortly."}, 502, origin)
+    profile = stored_profile(source)
+    try:
+        geo = _geo_from(dict(request.query_params))
+    except ValueError as exc:
+        return trial_json({"error": str(exc)}, 400, origin)
+    return trial_json({
+        "trial": summarize_study(study, geo),
+        "match": match_study(study, profile) if profile else None,
+    }, origin=origin)
+
 
 
 TRIALS_PAGE = """<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
@@ -645,9 +662,11 @@ details{margin-top:8px}li{margin:4px 0}
 </body></html>"""
 
 
-@trials.get("/trials")
-def trials_page():
-    return redirect(("/sample" if request.args.get("source") == "sample" else "/") + "#trials")
+@router.get("/trials")
+def trials_page(source: str = None):
+    dest = ("/sample" if source == "sample" else "/app") + "#trials"
+    return RedirectResponse(url=dest, status_code=302)
+
 
 
 INCLUSION_MARKS = {"met": "✓", "not_met": "✗", "mentions_condition": "⚑", "unknown": "·"}

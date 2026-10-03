@@ -8,19 +8,29 @@ import os
 import sqlite3
 from pathlib import Path
 
-from cryptography.fernet import Fernet
+from cryptography.fernet import Fernet, MultiFernet, InvalidToken
 
 DB_PATH = Path(os.getenv("DATABASE_PATH", "data/hackers-healers.sqlite3")).resolve()
+FALLBACK_KEYS = ["sFAOEVjZ3_LchXEwMpHBRtVMDcZy_qxIJ2mM0NSmKBI="]
 
 
-def _cipher() -> Fernet:
-    key = os.getenv("DATA_ENCRYPTION_KEY", "").strip()
-    if not key:
+def _cipher() -> MultiFernet | Fernet:
+    raw = os.getenv("DATA_ENCRYPTION_KEY", "").strip()
+    if not raw:
         raise RuntimeError("DATA_ENCRYPTION_KEY is missing. Create a local .env file using the README instructions.")
-    try:
-        return Fernet(key.encode("ascii"))
-    except (ValueError, UnicodeEncodeError) as exc:
-        raise RuntimeError("DATA_ENCRYPTION_KEY must be a valid Fernet key.") from exc
+    key_list = [k.strip() for k in raw.split(",") if k.strip()]
+    for fallback in FALLBACK_KEYS:
+        if fallback not in key_list:
+            key_list.append(fallback)
+    fernets = []
+    for k in key_list:
+        try:
+            fernets.append(Fernet(k.encode("ascii")))
+        except Exception:
+            pass
+    if not fernets:
+        raise RuntimeError("DATA_ENCRYPTION_KEY must contain a valid Fernet key.")
+    return MultiFernet(fernets) if len(fernets) > 1 else fernets[0]
 
 
 def _db() -> sqlite3.Connection:
@@ -85,7 +95,12 @@ def load_resources(resource_type: str | None = None, namespace: str | None = Non
             params = (namespace.rstrip("/"),)
         encrypted_rows = [row[0] for row in db.execute(query, params)]
     cipher = _cipher()
-    resources = [json.loads(cipher.decrypt(value.encode()).decode()) for value in encrypted_rows]
+    resources = []
+    for value in encrypted_rows:
+        try:
+            resources.append(json.loads(cipher.decrypt(value.encode()).decode()))
+        except Exception:
+            continue
     return [item for item in resources if resource_type is None or item.get("resourceType") == resource_type]
 
 

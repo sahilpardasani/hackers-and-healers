@@ -13,13 +13,15 @@ import threading
 from datetime import date
 from urllib.parse import urlparse
 
-from flask import Blueprint, jsonify, request, session
+from fastapi import APIRouter, Request
+from fastapi.responses import JSONResponse
 from openai import OpenAI, APIError, AuthenticationError, RateLimitError, APITimeoutError
 
 import clinicaltrial as ct
 from dashboard import _effective, _timestamp
 
-health = Blueprint("health", __name__)
+router = APIRouter()
+health = router  # Compatibility alias
 _busy = threading.BoundedSemaphore(2)
 NVIDIA_URL = "https://integrate.api.nvidia.com/v1"
 SYSTEM = """You are Patient Agency's health-record explainer, not a clinician.
@@ -100,41 +102,42 @@ def _context(source, body):
             "limitations": "Partial snapshot; dates may be historical. No pregnancy/breastfeeding status established. Lab-derived topics are not diagnoses."}
 
 
-@health.before_request
-def _guard():
-    if request.content_length and request.content_length > 20000:
-        return jsonify(error="Request too large."), 413
-    origin = request.headers.get("Origin")
-    if origin and (urlparse(origin).hostname not in {"127.0.0.1", "localhost"} or urlparse(origin).port not in {3000, 5173}):
-        return jsonify(error="This local endpoint does not allow that origin."), 403
+def _guard(request: Request):
+    cl = request.headers.get("content-length")
+    if cl and int(cl) > 20000:
+        return JSONResponse({"error": "Request too large."}, status_code=413, headers={"Cache-Control": "no-store"})
+    origin = request.headers.get("origin")
+    if origin:
+        parsed = urlparse(origin)
+        if parsed.hostname not in {"127.0.0.1", "localhost"} or parsed.port not in {3000, 5173}:
+            return JSONResponse({"error": "This local endpoint does not allow that origin."}, status_code=403, headers={"Cache-Control": "no-store"})
+    return None
 
 
-@health.after_request
-def _private(response):
-    response.headers["Cache-Control"] = "no-store"
-    return response
-
-
-@health.errorhandler(ValueError)
-def _bad_input(error):
-    return jsonify(error="Invalid request or record source. Review the context and try again."), 400
-
-
-def _body():
-    body = request.get_json(silent=True)
-    if not isinstance(body, dict):
-        raise ValueError("Expected JSON object.")
-    return body
-
-
-@health.post("/api/health/context")
-def preview():
-    body = _body()
-    context = _context(body.get("source", "connected"), body)
+@router.post("/api/health/context")
+async def preview(request: Request):
+    guard = _guard(request)
+    if guard:
+        return guard
+    try:
+        body = await request.json()
+        if not isinstance(body, dict):
+            raise ValueError("Expected JSON object.")
+        context = _context(body.get("source", "connected"), body)
+    except Exception:
+        return JSONResponse({"error": "Invalid request or record source. Review the context and try again."}, status_code=400, headers={"Cache-Control": "no-store"})
     token = secrets.token_urlsafe(24)
-    session["health_preview"] = {"token": token, "digest": _digest(context)}
-    return jsonify(context=context, preview_token=token, configured=bool(os.getenv("NVIDIA_API_KEY")),
-                   model=os.getenv("NVIDIA_MODEL", "z-ai/glm-5.3"), provider="NVIDIA")
+    request.session["health_preview"] = {"token": token, "digest": _digest(context)}
+    return JSONResponse(
+        {
+            "context": context,
+            "preview_token": token,
+            "configured": bool(os.getenv("NVIDIA_API_KEY")),
+            "model": os.getenv("NVIDIA_MODEL", "z-ai/glm-5.3"),
+            "provider": "NVIDIA",
+        },
+        headers={"Cache-Control": "no-store"},
+    )
 
 
 def _complete(context, question, trials):
@@ -167,43 +170,55 @@ def _complete(context, question, trials):
 
 def _provider_failure(message, trials, status):
     if trials:
-        # Preserve useful public search results, without pretending the AI answered.
         cards = [{"nct_id": t["nct_id"], "title": t["title"], "status": t["status"],
                   "url": ct.STUDY_URL.format(t["nct_id"]), "match": t["match"]} for t in trials[:3]]
-        return jsonify(answer="The AI explanation is unavailable. The studies below were retrieved from ClinicalTrials.gov using your search topics. They are search candidates, not AI recommendations or confirmation that you qualify. Review the full criteria with your clinician or study team.",
-                       trials=cards, warnings=[message], explanation_available=False,
-                       disclaimer="Search results only — no AI explanation was generated.")
-    return jsonify(error=message), status
+        return JSONResponse(
+            {"answer": "The AI explanation is unavailable. The studies below were retrieved from ClinicalTrials.gov using your search topics. They are search candidates, not AI recommendations or confirmation that you qualify. Review the full criteria with your clinician or study team.",
+             "trials": cards, "warnings": [message], "explanation_available": False,
+             "disclaimer": "Search results only — no AI explanation was generated."},
+            status_code=200, headers={"Cache-Control": "no-store"}
+        )
+    return JSONResponse({"error": message}, status_code=status, headers={"Cache-Control": "no-store"})
 
 
-@health.post("/api/health/ask")
-def ask():
-    body = _body()
+@router.post("/api/health/ask")
+async def ask(request: Request):
+    guard = _guard(request)
+    if guard:
+        return guard
+    try:
+        body = await request.json()
+        if not isinstance(body, dict):
+            raise ValueError("Expected JSON object.")
+    except Exception:
+        return JSONResponse({"error": "Invalid request or record source. Review the context and try again."}, status_code=400, headers={"Cache-Control": "no-store"})
     question = body.get("question")
     if not isinstance(question, str) or not 1 <= len(question.strip()) <= 1200:
-        return jsonify(error="Enter a question of 1–1,200 characters."), 400
+        return JSONResponse({"error": "Enter a question of 1–1,200 characters."}, status_code=400, headers={"Cache-Control": "no-store"})
     if body.get("consent_nvidia") is not True:
-        return jsonify(error="Consent is required before sending health context to NVIDIA."), 400
-    context = _context(body.get("source", "connected"), body)
-    saved = session.get("health_preview", {})
+        return JSONResponse({"error": "Consent is required before sending health context to NVIDIA."}, status_code=400, headers={"Cache-Control": "no-store"})
+    try:
+        context = _context(body.get("source", "connected"), body)
+    except Exception:
+        return JSONResponse({"error": "Invalid request or record source. Review the context and try again."}, status_code=400, headers={"Cache-Control": "no-store"})
+    saved = request.session.get("health_preview", {})
     if (not isinstance(body.get("preview_token"), str) or
             not secrets.compare_digest(body["preview_token"], saved.get("token", "")) or
             saved.get("digest") != _digest(context)):
-        return jsonify(error="Your record or source changed. Refresh the context and consent again."), 409
+        return JSONResponse({"error": "Your record or source changed. Refresh the context and consent again."}, status_code=409, headers={"Cache-Control": "no-store"})
     if not os.getenv("NVIDIA_API_KEY"):
-        return jsonify(error="Add NVIDIA_API_KEY to the server’s private .env and restart."), 503
+        return JSONResponse({"error": "Add NVIDIA_API_KEY to the server’s private .env and restart."}, status_code=503, headers={"Cache-Control": "no-store"})
     if not _busy.acquire(blocking=False):
-        return jsonify(error="The assistant is busy. Try again shortly."), 429
+        return JSONResponse({"error": "The assistant is busy. Try again shortly."}, status_code=429, headers={"Cache-Control": "no-store"})
     trials, warnings = [], []
     try:
         if body.get("include_trials") is True:
             if body.get("consent_trials") is not True:
-                return jsonify(error="Confirm sharing search topics with ClinicalTrials.gov."), 400
+                return JSONResponse({"error": "Confirm sharing search topics with ClinicalTrials.gov."}, status_code=400, headers={"Cache-Control": "no-store"})
             try:
                 trials = ct.find_trials(context["profile"], per_condition=10, limit=5)
             except (ct.requests.RequestException, ValueError):
                 warnings.append("ClinicalTrials.gov is unavailable. No trial recommendations were generated.")
-        # No names/phones of study contacts needed by the LLM, either.
         evidence = [{"nct_id": t["nct_id"], "title": _text(t["title"], 350), "status": t["status"],
                      "conditions": t["conditions"][:10], "summary": t["summary"][:700],
                      "match": {"verdict": t["match"].get("verdict"),
@@ -215,8 +230,9 @@ def ask():
         answer, ids = _complete(context, question.strip(), evidence)
         selected = [{"nct_id": t["nct_id"], "title": t["title"], "status": t["status"],
                      "url": ct.STUDY_URL.format(t["nct_id"]), "match": t["match"]} for t in trials if t["nct_id"] in ids]
-        return jsonify(answer=answer, trials=selected, warnings=warnings, model=os.getenv("NVIDIA_MODEL", "z-ai/glm-5.3"),
-                       disclaimer="AI can be wrong. Review findings and trial eligibility with your clinician or study team.")
+        return JSONResponse({"answer": answer, "trials": selected, "warnings": warnings, "model": os.getenv("NVIDIA_MODEL", "z-ai/glm-5.3"),
+                             "disclaimer": "AI can be wrong. Review findings and trial eligibility with your clinician or study team."},
+                            headers={"Cache-Control": "no-store"})
     except AuthenticationError:
         return _provider_failure("NVIDIA rejected the server API key. Replace or rotate it in .env.", trials, 502)
     except RateLimitError:

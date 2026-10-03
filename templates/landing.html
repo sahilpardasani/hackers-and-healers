@@ -1,0 +1,381 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Hackers &amp; Healers — Patient Data Sovereignty &amp; Precision Clinical Trials</title>
+  <meta name="description" content="Empowering patients to use their health records to discover life-saving clinical trials or monetize their de-identified data on their own terms with zero-knowledge encryption.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='landing.css') }}">
+</head>
+<body>
+  <!-- Navigation -->
+  <header class="navbar">
+    <div class="container nav-container">
+      <div class="brand-group">
+        <a href="/" class="brand-group" aria-label="Hackers &amp; Healers Home">
+          <div class="brand-icon">
+            <svg viewBox="0 0 24 24"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+          </div>
+          <span class="brand-text">Hackers &amp; Healers</span>
+        </a>
+      </div>
+
+      <nav aria-label="Main Navigation">
+        <ul class="nav-links">
+          <li><a href="#how-it-works" class="nav-link">How It Works</a></li>
+          <li><a href="#trial-matching" class="nav-link">Trial Matching</a></li>
+          <li><a href="#data-rewards" class="nav-link">Data Rewards</a></li>
+          <li><a href="#security" class="nav-link">Zero-Knowledge Security</a></li>
+        </ul>
+      </nav>
+
+      <div class="nav-actions">
+        {% if connection and patient and patient.name %}
+          <div class="user-badge" id="connected-user-indicator">
+            <span class="pulse-dot"></span>
+            <span>{{ patient.name }}</span>
+          </div>
+          <a href="{{ url_for('app') }}" class="btn btn-primary" id="header-launch-app-btn">
+            Open Dashboard &rarr;
+          </a>
+        {% else %}
+          <a href="{{ url_for('sample_dashboard') }}" class="btn btn-secondary" id="header-sample-btn">
+            Demo Mode
+          </a>
+          <a href="{{ url_for('app') }}" class="btn btn-primary" id="header-launch-app-btn">
+            Launch App &rarr;
+          </a>
+        {% endif %}
+      </div>
+    </div>
+  </header>
+
+  <!-- Hero Section -->
+  <main id="main-content">
+    <section class="hero" id="hero-section">
+      <div class="container hero-content">
+        <div class="pill-badge">
+          <span class="pulse-dot"></span>
+          SMART-on-FHIR &bull; Patient-Owned Data Platform
+        </div>
+        
+        <h1 class="hero-title">
+          Your Health Data Belongs to You.<br>
+          <span class="gradient-text">Find Breakthrough Clinical Trials &mdash; Or Monetize Your Data on Your Terms.</span>
+        </h1>
+
+        <p class="hero-subtitle">
+          Directly connect your electronic medical records in seconds. Our zero-knowledge local matching engine scans active clinical trials for your exact diagnosis and lab biomarkers, or lets you license de-identified records to research programs with guaranteed direct compensation.
+        </p>
+
+        <div class="hero-cta">
+          <a href="{{ url_for('app') }}" class="btn btn-primary btn-large" id="hero-cta-launch">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            Connect MyChart &amp; Find Trials
+          </a>
+          <a href="{{ url_for('sample_dashboard') }}" class="btn btn-secondary btn-large" id="hero-cta-sample">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            Explore Interactive Demo
+          </a>
+        </div>
+
+        <div class="trust-strip">
+          <div class="trust-item">
+            <svg viewBox="0 0 24 24" fill="none"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            <span>AES-256 Local Encryption</span>
+          </div>
+          <div class="trust-item">
+            <svg viewBox="0 0 24 24" fill="none"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+            <span>Standardized FHIR R4 Direct Sync</span>
+          </div>
+          <div class="trust-item">
+            <svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+            <span>400,000+ ClinicalTrials.gov Studies</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Live Interactive Dashboard Preview -->
+      <div class="container preview-wrapper">
+        <div class="preview-glow" aria-hidden="true"></div>
+        <div class="preview-card" id="interactive-preview-card">
+          <div class="preview-header">
+            <div class="patient-info">
+              <div class="avatar">CL</div>
+              <div class="patient-meta">
+                <h3>{% if patient and patient.name %}{{ patient.name }}{% else %}Camila Lopez{% endif %}</h3>
+                <p>Postpartum Health Record &bull; Epic MyChart Connected</p>
+              </div>
+            </div>
+            <div class="preview-status">
+              <span class="pulse-dot"></span>
+              <span>Encrypted Local Vault &bull; Live Sync</span>
+            </div>
+          </div>
+
+          <div class="preview-grid">
+            <!-- Verified Biomarkers -->
+            <div class="data-box">
+              <div class="data-box-title">
+                <span>Verified Biomarkers</span>
+                <span>FHIR R4</span>
+              </div>
+              <div class="biomarker-chips">
+                <div class="biomarker-row">
+                  <span>Hemoglobin A1c</span>
+                  <span class="biomarker-val">5.8 % (Prediabetes)</span>
+                </div>
+                <div class="biomarker-row">
+                  <span>Blood Pressure</span>
+                  <span class="biomarker-val">118/76 mmHg</span>
+                </div>
+                <div class="biomarker-row">
+                  <span>Weight &amp; BMI</span>
+                  <span class="biomarker-val">70.2 kg &bull; 26.8</span>
+                </div>
+                <div class="biomarker-row">
+                  <span>Renal eGFR</span>
+                  <span class="biomarker-val">98 mL/min/1.73m²</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Instant Trial Matches -->
+            <div class="trial-match-box">
+              <div class="data-box-title" style="color: #34d399;">
+                <span>Precision Trial Matches</span>
+                <span>98% Fit Score</span>
+              </div>
+              <div class="trial-item">
+                <div class="trial-item-title">Novel Oral GLP-1/GIP Agonist Phase 3</div>
+                <div class="trial-item-sub">
+                  <span>Criteria: HbA1c &ge; 5.7%, BMI &ge; 25</span>
+                  <strong style="color: #34d399;">Eligible</strong>
+                </div>
+              </div>
+              <div class="trial-item" style="border-left-color: #06b6d4;">
+                <div class="trial-item-title">Postpartum Metabolic Recovery Study</div>
+                <div class="trial-item-sub">
+                  <span>Academic Medical Center &bull; Remote</span>
+                  <strong style="color: #38bdf8;">Enrolling</strong>
+                </div>
+              </div>
+            </div>
+
+            <!-- Data Sovereignty & Rewards -->
+            <div class="data-valuation-box">
+              <div class="data-box-title" style="color: #818cf8;">
+                <span>Data Asset Valuation</span>
+                <span>Patient Controlled</span>
+              </div>
+              <p class="valuation-sub">Estimated research compensation for de-identified metabolic registry:</p>
+              <div class="valuation-amount">$250 / quarter</div>
+              <p class="valuation-sub">100% of data licensing proceeds paid directly to you. Zero middleman cuts.</p>
+            </div>
+          </div>
+
+          <div style="text-align: center; padding-top: 0.5rem;">
+            <a href="{{ url_for('app') }}" class="btn btn-primary" style="font-size: 0.95rem;">
+              Access Full Records &amp; Run Live Matching in the App &rarr;
+            </a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Core Pillars / Why It Matters -->
+    <section class="section" id="trial-matching" style="background: rgba(255, 255, 255, 0.01);">
+      <div class="container">
+        <div class="section-header">
+          <p class="section-eyebrow">The Business Model</p>
+          <h2 class="section-title">Why Health Data Sovereignty Changes Everything</h2>
+          <p class="section-desc">
+            Health systems and corporate data brokers sell anonymized patient files for billions every year without patients seeing a penny. We return power, precision treatment, and compensation to where it belongs: the patient.
+          </p>
+        </div>
+
+        <div class="features-grid">
+          <!-- Card 1 -->
+          <article class="feature-card" style="--card-accent: #10b981;">
+            <div class="feature-icon-wrap">
+              <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="m4.93 4.93 4.24 4.24"/><path d="m14.83 9.17 4.24-4.24"/><path d="m14.83 14.83 4.24 4.24"/><path d="m9.17 14.83-4.24 4.24"/></svg>
+            </div>
+            <h3 class="feature-title">Precision Clinical Trial Matching</h3>
+            <p class="feature-body">
+              Never get lost in medical jargon or 50-page questionnaires. Our automated engine evaluates your actual diagnostic history, HbA1c, eGFR, lipid levels, and current medications directly against ClinicalTrials.gov protocols to pinpoint the exact trials you qualify for.
+            </p>
+          </article>
+
+          <!-- Card 2 -->
+          <article class="feature-card" style="--card-accent: #818cf8;">
+            <div class="feature-icon-wrap">
+              <svg viewBox="0 0 24 24"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+            </div>
+            <h3 class="feature-title">Monetize Your Real-World Data</h3>
+            <p class="feature-body">
+              Life sciences companies pay substantial stipends for longitudinal real-world evidence (RWE). Choose to securely license your de-identified, high-fidelity health records directly to university studies and biotech sponsors — and receive 100% of the compensation.
+            </p>
+          </article>
+
+          <!-- Card 3 -->
+          <article class="feature-card" style="--card-accent: #06b6d4;">
+            <div class="feature-icon-wrap">
+              <svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            </div>
+            <h3 class="feature-title">Local-First Zero-Knowledge Vault</h3>
+            <p class="feature-body">
+              We never upload unencrypted protected health information (PHI) to cloud servers. All records pulled via SMART-on-FHIR are stored encrypted in your local database using your own private Fernet AES-256 key.
+            </p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- How It Works Section -->
+    <section class="section" id="how-it-works">
+      <div class="container">
+        <div class="section-header">
+          <p class="section-eyebrow">Simple &bull; Transparent &bull; Private</p>
+          <h2 class="section-title">How Hackers &amp; Healers Works</h2>
+          <p class="section-desc">Take back ownership of your medical history in three frictionless steps.</p>
+        </div>
+
+        <div class="steps-container">
+          <div class="step-card">
+            <div class="step-num">01</div>
+            <h3>1-Click SMART-on-FHIR Sync</h3>
+            <p>Select your health system (Epic MyChart, Cerner, etc.) and authenticate using the federal SMART-on-FHIR standard. We never see or store your hospital password.</p>
+          </div>
+
+          <div class="step-card">
+            <div class="step-num">02</div>
+            <h3>Instant Biomarker Evaluation</h3>
+            <p>Our algorithms instantly parse your labs, active conditions, and vitals locally. We map your profile against active clinical trials and research registries without sending raw data to third parties.</p>
+          </div>
+
+          <div class="step-card">
+            <div class="step-num">03</div>
+            <h3>Participate, Heal, or Get Paid</h3>
+            <p>Connect with clinical investigators for cutting-edge treatments at zero cost, or opt into privacy-preserving observational studies that pay recurring stipends for your data contribution.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Comparison Table -->
+    <section class="section" id="security" style="background: rgba(255, 255, 255, 0.015);">
+      <div class="container">
+        <div class="section-header">
+          <p class="section-eyebrow">Fairness By Design</p>
+          <h2 class="section-title">The Old Healthcare System vs. Hackers &amp; Healers</h2>
+          <p class="section-desc">See the stark contrast between legacy health data extraction and patient sovereignty.</p>
+        </div>
+
+        <div class="comparison-table-wrapper">
+          <table class="comparison-table">
+            <thead>
+              <tr>
+                <th>Criteria</th>
+                <th class="dim-col">Legacy Healthcare &amp; Data Brokers</th>
+                <th class="highlight-col">Hackers &amp; Healers</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>Who profits from health records?</strong></td>
+                <td class="dim-col">Brokers &amp; hospital networks pocket billions</td>
+                <td class="highlight-col">&check; Patients receive 100% of data stipends</td>
+              </tr>
+              <tr>
+                <td><strong>Clinical trial discovery</strong></td>
+                <td class="dim-col">Passive, fragmented, often too late to qualify</td>
+                <td class="highlight-col">&check; Instant automated biomarker &amp; criteria matching</td>
+              </tr>
+              <tr>
+                <td><strong>Data storage &amp; security</strong></td>
+                <td class="dim-col">Centralized cloud databases vulnerable to breaches</td>
+                <td class="highlight-col">&check; Local client-side AES-256 encrypted vault</td>
+              </tr>
+              <tr>
+                <td><strong>Patient Consent</strong></td>
+                <td class="dim-col">Buried in 50-page intake legal forms</td>
+                <td class="highlight-col">&check; Granular, explicit consent for each trial or study</td>
+              </tr>
+              <tr>
+                <td><strong>Data Portability</strong></td>
+                <td class="dim-col">Walled gardens and proprietary formats</td>
+                <td class="highlight-col">&check; 100% open FHIR R4 standard bundles</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- Final Call to Action -->
+    <section class="section">
+      <div class="container">
+        <div class="cta-banner">
+          <h2>Take Command of Your Health Future</h2>
+          <p>
+            Whether you need a life-saving experimental therapy or want to monetize the value of your medical records, Hackers &amp; Healers puts you in the driver’s seat.
+          </p>
+          <div class="hero-cta">
+            <a href="{{ url_for('app') }}" class="btn btn-primary btn-large" id="footer-cta-app">
+              Launch Patient App &rarr;
+            </a>
+            <a href="{{ url_for('sample_dashboard') }}" class="btn btn-secondary btn-large" id="footer-cta-demo">
+              View Sample Demo
+            </a>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-top">
+        <div class="footer-brand">
+          <div class="brand-group" style="margin-bottom: 0.75rem;">
+            <div class="brand-icon" style="width: 30px; height: 30px;">
+              <svg viewBox="0 0 24 24" style="width: 18px; height: 18px;"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+            </div>
+            <span class="brand-text" style="font-size: 1.1rem;">Hackers &amp; Healers</span>
+          </div>
+          <p>Empowering patient agency through sovereign health data ownership, precision trial discovery, and equitable research compensation.</p>
+        </div>
+
+        <div class="footer-links-col">
+          <h4>Platform</h4>
+          <ul>
+            <li><a href="{{ url_for('app') }}">Patient Dashboard</a></li>
+            <li><a href="{{ url_for('sample_dashboard') }}">Synthetic Demo</a></li>
+            <li><a href="/trials">Clinical Trials Matcher</a></li>
+            <li><a href="/docs">OpenAPI / Swagger</a></li>
+          </ul>
+        </div>
+
+        <div class="footer-links-col">
+          <h4>Standards &amp; Tech</h4>
+          <ul>
+            <li><a href="https://hl7.org/fhir/R4/" target="_blank" rel="noopener">HL7 FHIR R4</a></li>
+            <li><a href="https://smarthealthit.org/" target="_blank" rel="noopener">SMART on FHIR</a></li>
+            <li><a href="https://clinicaltrials.gov/" target="_blank" rel="noopener">ClinicalTrials.gov</a></li>
+            <li><a href="{{ url_for('terms') }}">Terms &amp; Privacy Notice</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="footer-bottom">
+        <span>&copy; 2026 Hackers &amp; Healers. All rights reserved. Open-source patient empowerment.</span>
+        <span>Notice: Hackers &amp; Healers is a data navigation tool and does not provide formal medical advice.</span>
+      </div>
+    </div>
+  </footer>
+</body>
+</html>

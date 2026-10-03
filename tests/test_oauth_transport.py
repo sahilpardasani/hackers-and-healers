@@ -110,7 +110,7 @@ class OAuthTransportTests(unittest.TestCase):
             completed = client.get("/callback", query_string={"state": params["state"][0], "code": "test-code"},
                                    base_url="https://127.0.0.1:3000")
             self.assertEqual(completed.status_code, 302)
-            self.assertEqual(completed.location, "/")
+            self.assertEqual(completed.location, "/app")
             data = exchange.call_args.kwargs["data"]
             self.assertEqual(data["redirect_uri"], callback)
             self.assertNotIn("client_id", data)
