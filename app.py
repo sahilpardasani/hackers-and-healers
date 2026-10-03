@@ -27,7 +27,10 @@ FHIR_BASE_URL = os.getenv("FHIR_BASE_URL", "https://fhir.epic.com/interconnect-f
 CLIENT_ID = os.getenv("CLIENT_ID", "").strip()
 CLIENT_SECRET = os.getenv("CLIENT_SECRET", "").strip()
 REDIRECT_URI = os.getenv("REDIRECT_URI", "http://127.0.0.1:3000/callback").strip()
-SCOPES = os.getenv("FHIR_SCOPES", "launch/patient patient/*.read offline_access").strip()
+# Epic derives resource scopes from the APIs selected in the app registration.
+# Request only standalone patient context and refresh access here; a broad
+# wildcard resource scope can be rejected when it is not enabled by Epic.
+SCOPES = os.getenv("FHIR_SCOPES", "launch/patient offline_access").strip()
 SYNC_HOUR = int(os.getenv("SYNC_HOUR", "3"))
 FHIR_TIMEOUT = (5, 45)
 MAX_PAGES_PER_QUERY = 100
@@ -254,11 +257,23 @@ def connect():
 
 @app.get("/callback")
 def callback():
-    pending = pending_auth.pop(_sid(), None)
-    if not pending or not secrets.compare_digest(request.args.get("state", ""), pending["state"]):
-        abort(400, "Authorization state did not match; restart the connection flow.")
-    if request.args.get("error"):
-        return redirect(url_for("index", error="The health system did not authorize this connection."))
+    sid = _sid()
+    pending = pending_auth.get(sid)
+    if not pending:
+        return redirect(url_for("index", error="This sign-in attempt expired or the app restarted. Start a fresh connection."))
+    if not secrets.compare_digest(request.args.get("state", ""), pending["state"]):
+        pending_auth.pop(sid, None)
+        return redirect(url_for("index", error="OAuth state did not match. For your security, start a fresh connection."))
+    pending_auth.pop(sid, None)
+    oauth_error = request.args.get("error")
+    if oauth_error:
+        messages = {
+            "access_denied": "The patient declined access. No connection was saved.",
+            "invalid_client": "Epic did not recognize this app. Verify the non-production Client ID, exact redirect URI, and Sandbox readiness.",
+            "invalid_scope": "Epic rejected a requested scope. Check the APIs selected for this app and start again after Sandbox sync.",
+            "unauthorized_client": "Epic has not enabled this app for the Sandbox yet. Check its status and try again after settings sync.",
+        }
+        return redirect(url_for("index", error=messages.get(oauth_error, "Epic returned an OAuth authorization error. Verify the app settings and start again.")))
     code = request.args.get("code", "")
     if not code:
         abort(400, "The FHIR server did not return an authorization code.")
@@ -282,6 +297,9 @@ def callback():
         }
         storage.save_connection(connection)
         threading.Thread(target=_first_sync, args=(connection,), daemon=True).start()
+    except requests.HTTPError as exc:
+        status = exc.response.status_code if exc.response is not None else "unknown"
+        return redirect(url_for("index", error=f"Epic rejected the token exchange (HTTP {status}). Verify the Sandbox secret matches the non-production Client ID and that the redirect URI is exact."))
     except (requests.RequestException, ValueError, RuntimeError):
         return redirect(url_for("index", error="Connection could not be saved. Check app settings and ensure local encryption is configured."))
     return redirect(url_for("index"))
