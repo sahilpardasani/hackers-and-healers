@@ -22,11 +22,12 @@ load_dotenv()
 import endpoint_directory
 import storage
 from ckm import summarize
+from local_server import server_options
 
 FHIR_BASE_URL = os.getenv("FHIR_BASE_URL", "https://fhir.epic.com/interconnect-fhir-oauth/api/FHIR/R4").strip().rstrip("/")
 CLIENT_ID = os.getenv("CLIENT_ID", "").strip()
 CLIENT_SECRET = os.getenv("CLIENT_SECRET", "").strip()
-REDIRECT_URI = os.getenv("REDIRECT_URI", "http://127.0.0.1:3000/callback").strip()
+REDIRECT_URI = os.getenv("REDIRECT_URI", "https://127.0.0.1:3000/callback").strip()
 # Epic derives resource scopes from the APIs selected in the app registration.
 # Request only standalone patient context and refresh access here; a broad
 # wildcard resource scope can be rejected when it is not enabled by Epic.
@@ -37,7 +38,8 @@ MAX_PAGES_PER_QUERY = 100
 
 app = Flask(__name__)
 app.secret_key = os.getenv("FLASK_SECRET_KEY") or secrets.token_hex(32)
-app.config.update(SESSION_COOKIE_HTTPONLY=True, SESSION_COOKIE_SAMESITE="Lax")
+app.config.update(SESSION_COOKIE_HTTPONLY=True, SESSION_COOKIE_SAMESITE="Lax",
+                  SESSION_COOKIE_SECURE=urlparse(REDIRECT_URI).scheme == "https")
 logging.getLogger("werkzeug").setLevel(logging.ERROR)
 
 pending_auth: dict[str, dict[str, str]] = {}
@@ -366,11 +368,16 @@ def refresh_endpoint_directory():
 
 
 if __name__ == "__main__":
+    # Validate and prepare the callback transport before starting background work.
+    run_options = server_options(REDIRECT_URI)
     try:
         start_scheduler()
     except RuntimeError:
         app.logger.warning("Daily scheduler could not start.")
     if endpoint_directory.cache_is_stale():
         threading.Thread(target=_refresh_directory_if_stale, daemon=True).start()
-    print("Open http://127.0.0.1:3000. Keep this process running for scheduled syncs.")
-    app.run(host="127.0.0.1", port=3000, debug=False, use_reloader=False)
+    callback_url = urlparse(REDIRECT_URI)
+    print(f"Open {callback_url.scheme}://{callback_url.netloc}/. Keep this process running for scheduled syncs.")
+    if callback_url.scheme == "https":
+        print("Local HTTPS uses a self-signed development certificate in data/local-tls.")
+    app.run(**run_options, debug=False, use_reloader=False)
