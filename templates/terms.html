@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Terms and Conditions — Hackers &amp; Healers</title>
+  <style>
+    :root { font: 16px/1.65 system-ui, sans-serif; color-scheme: light dark; }
+    body { max-width: 860px; margin: 36px auto; padding: 0 20px 48px; }
+    h1 { line-height: 1.2; }
+    h2 { margin-top: 1.8em; }
+    .notice { padding: 14px 16px; border-left: 4px solid #d99000; background: #d9900018; border-radius: 6px; }
+    .muted { opacity: .75; }
+    a { color: #817aff; }
+  </style>
+</head>
+<body>
+  <p><a href="{{ url_for('index') }}">← Back to Hackers &amp; Healers</a></p>
+  <h1>Terms and Conditions</h1>
+  <p class="notice"><strong>Draft for review — not a final or operative agreement.</strong> These terms are a prototype starting point, not legal advice. The project team must have qualified counsel review and approve them, fill in the responsible operator and contact details, and decide when and how users will be asked to accept final terms before treating them as binding.</p>
+
+  <p><strong>Last updated:</strong> October 2, 2026</p>
+
+  <h2>1. About this prototype</h2>
+  <p>Hackers &amp; Healers (the “Prototype”) is an experimental, local-first demonstration that can connect, with a patient’s authorization, to a health system’s FHIR API and display selected health-record summaries. It is provided for evaluation and demonstration, not as a production healthcare service.</p>
+
+  <h2>2. Eligibility and authorized use</h2>
+  <p>Use the Prototype only if you are the patient or have authority to act for that patient, and only with permission to access the selected health-system account and records. Each patient must complete their own sign-in and authorization with the health system. Do not ask another person to give you their password, use their session, or authorize access on their behalf. The Prototype does not request or store MyChart passwords.</p>
+  <p>You agree not to use the Prototype to access records without authorization, interfere with a health system or its services, or violate applicable law or the health system’s terms.</p>
+
+  <h2>3. Health information and local storage</h2>
+  <p>In its current local-demo configuration, the Prototype communicates with the health system you select and stores OAuth tokens and retrieved FHIR records in an encrypted SQLite database on the computer running the app. The encryption key is configured locally by the operator. Anyone with access to that computer, database, or key may be able to access the records; encryption does not replace device security. Do not use a shared or untrusted computer for real health information.</p>
+  <p>The Prototype is not designed or approved for production handling of protected health information. Do not deploy it for real patients or represent that it meets HIPAA or any other regulatory requirement without a separate legal, privacy, security, and operational review.</p>
+  <p>Selecting <strong>Disconnect</strong> clears the saved OAuth connection and stops future syncs, but the current prototype does not delete records already stored in its local database. Those records remain encrypted on that computer until the database is removed. Preserve the encryption key securely if you need to read the database; losing the key can make it unrecoverable.</p>
+
+  <h2>4. Health-system authorization and access</h2>
+  <p>The health system controls authentication, the data it makes available, the scopes and duration of access, refresh-token behavior, and revocation. The Prototype cannot guarantee that access will continue or that any particular record will be returned. You can revoke the app’s authorization through the health system where that option is available; disconnecting here is not a substitute for revoking authorization there.</p>
+
+  <h2>5. No medical advice or emergency service</h2>
+  <p>The dashboard’s summaries and calculations are informational and may be incomplete, delayed, or incorrect. They are not medical advice, diagnosis, treatment, or a substitute for a licensed clinician’s judgment. Do not make care decisions based on the Prototype. Contact your healthcare professional for medical questions. For an emergency, call your local emergency number or seek emergency care.</p>
+
+  <h2>6. Prototype availability and changes</h2>
+  <p>The Prototype is provided “as is” and may be changed, interrupted, or discontinued at any time. The project team does not promise uninterrupted operation, complete or accurate data, compatibility with every health system, or recovery of locally stored data. You are responsible for backing up or securely removing local files as appropriate.</p>
+
+  <h2>7. Third-party services and names</h2>
+  <p>Health-system FHIR services are operated by their respective organizations and are subject to their own terms and privacy practices. Epic and MyChart are referenced only to identify compatible services; Hackers &amp; Healers is not endorsed by or affiliated with Epic Systems Corporation. Third-party names and marks belong to their respective owners.</p>
+
+  <h2>8. Disclaimers and liability</h2>
+  <p>To the extent permitted by law, the Prototype is offered without warranties, including implied warranties of merchantability, fitness for a particular purpose, availability, or non-infringement. To the extent permitted by law, the project team will not be liable for indirect, incidental, special, consequential, or punitive damages arising from use of this non-production Prototype. Nothing in this draft excludes liability that cannot legally be excluded.</p>
+
+  <h2>9. Changes and contact</h2>
+  <p>These draft terms should be replaced with reviewed, final terms before production use. The responsible operator, governing law, notice process, and support contact have not yet been established and must be completed by the project team with counsel.</p>
+  <p class="muted">This page is a draft accompanying an open-source prototype. Viewing it does not itself create a binding agreement.</p>
+</body>
+</html>
