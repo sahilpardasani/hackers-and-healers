@@ -179,7 +179,7 @@ def sync_connection(connection: dict, last_sync_at: str | None) -> dict:
         resources = fetch_bundle(connection, resource_type, query)
         fetched.extend(resources)
         counts[label] = len(resources)
-    stored = storage.save_resources(fetched)
+    stored = storage.save_resources(fetched, namespace=connection["fhir_base_url"])
     synced_at = datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
     storage.save_connection(connection, last_sync_at=synced_at)
     return {"counts": counts, "stored": stored, "synced_at": synced_at}

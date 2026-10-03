@@ -35,8 +35,12 @@ def _db() -> sqlite3.Connection:
 def save_connection(payload: dict, last_sync_at: str | None = None) -> None:
     token = _cipher().encrypt(json.dumps(payload, separators=(",", ":")).encode()).decode()
     with _db() as db:
-        prior = db.execute("SELECT last_sync_at FROM connection WHERE singleton=1").fetchone()
-        sync_time = last_sync_at if last_sync_at is not None else (prior[0] if prior else None)
+        prior = db.execute("SELECT payload,last_sync_at FROM connection WHERE singleton=1").fetchone()
+        same_server = False
+        if prior:
+            previous = json.loads(_cipher().decrypt(prior[0].encode()).decode())
+            same_server = previous.get("fhir_base_url") == payload.get("fhir_base_url")
+        sync_time = last_sync_at if last_sync_at is not None else (prior[1] if same_server else None)
         db.execute("INSERT INTO connection(singleton,payload,last_sync_at) VALUES(1,?,?) ON CONFLICT(singleton) DO UPDATE SET payload=excluded.payload,last_sync_at=excluded.last_sync_at", (token, sync_time))
 
 
@@ -54,13 +58,13 @@ def clear_connection() -> None:
         db.execute("DELETE FROM connection")
 
 
-def save_resources(resources: list[dict]) -> int:
+def save_resources(resources: list[dict], namespace: str = "") -> int:
     cipher = _cipher()
     rows = []
     for resource in resources:
         resource_type = str(resource.get("resourceType", "Resource"))
         resource_id = str(resource.get("id") or hashlib.sha256(json.dumps(resource, sort_keys=True).encode()).hexdigest())
-        key = hashlib.sha256(f"{resource_type}/{resource_id}".encode()).hexdigest()
+        key = hashlib.sha256(f"{namespace.rstrip('/')}/{resource_type}/{resource_id}".encode()).hexdigest()
         encrypted = cipher.encrypt(json.dumps(resource, separators=(",", ":"), ensure_ascii=False).encode()).decode()
         rows.append((key, encrypted))
     with _db() as db:
