@@ -345,6 +345,75 @@ def _distance_miles(lat1: float, lon1: float, lat2: float, lon2: float) -> float
     return 3958.8 * 2 * math.asin(math.sqrt(a))
 
 
+def _extract_principal_investigator(contacts: dict) -> dict:
+    """Find the Principal Investigator (or Lead Official / Study Contact) from protocol contacts."""
+    for official in contacts.get("overallOfficials", []):
+        name = official.get("name")
+        if name:
+            raw_role = official.get("role", "PRINCIPAL_INVESTIGATOR") or "PRINCIPAL_INVESTIGATOR"
+            role = raw_role.replace("_", " ").title()
+            affiliation = official.get("affiliation") or ""
+            return {
+                "name": name,
+                "role": role,
+                "affiliation": affiliation or "Lead Sponsoring Institution",
+                "source": "Overall Official",
+            }
+    for loc in contacts.get("locations", []):
+        facility = loc.get("facility") or ""
+        city = loc.get("city") or ""
+        state = loc.get("state") or ""
+        site_name = ", ".join(filter(None, [facility, city, state]))
+        for c in loc.get("contacts", []):
+            if "INVESTIGATOR" in (c.get("role") or "").upper():
+                name = c.get("name")
+                if name:
+                    raw_role = c.get("role") or "PRINCIPAL_INVESTIGATOR"
+                    role = raw_role.replace("_", " ").title()
+                    return {
+                        "name": name,
+                        "role": role,
+                        "affiliation": site_name or facility or "Lead Investigation Site",
+                        "phone": c.get("phone"),
+                        "email": c.get("email"),
+                        "source": "Site Principal Investigator",
+                    }
+    for c in contacts.get("centralContacts", []):
+        name = c.get("name")
+        if name:
+            raw_role = c.get("role") or "Study Director / Central Contact"
+            role = raw_role.replace("_", " ").title()
+            return {
+                "name": name,
+                "role": role,
+                "affiliation": "Central Study Coordination",
+                "phone": c.get("phone"),
+                "email": c.get("email"),
+                "source": "Central Contact",
+            }
+    for loc in contacts.get("locations", []):
+        facility = loc.get("facility") or ""
+        for c in loc.get("contacts", []):
+            name = c.get("name")
+            if name:
+                raw_role = c.get("role") or "Study Site Contact"
+                role = raw_role.replace("_", " ").title()
+                return {
+                    "name": name,
+                    "role": role,
+                    "affiliation": facility or "Clinical Investigation Site",
+                    "phone": c.get("phone"),
+                    "email": c.get("email"),
+                    "source": "Site Contact",
+                }
+    return {
+        "name": "Principal Investigator & Study Team",
+        "role": "Principal Investigator / Lead Study Team",
+        "affiliation": "Clinical Investigation Site",
+        "source": "Study Registry",
+    }
+
+
 def summarize_study(study: dict, geo: tuple[float, float, float] | None = None) -> dict:
     section = study.get("protocolSection", {})
     ident = section.get("identificationModule", {})
@@ -374,6 +443,7 @@ def summarize_study(study: dict, geo: tuple[float, float, float] | None = None) 
                           for item in section.get("armsInterventionsModule", {}).get("interventions", [])],
         "eligibility": {key: eligibility.get(key) for key in ("sex", "minimumAge", "maximumAge", "healthyVolunteers")},
         "contacts": [{key: item.get(key) for key in ("name", "phone", "email")} for item in contacts.get("centralContacts", [])],
+        "principal_investigator": _extract_principal_investigator(contacts),
         "locations": locations[:5],
         "location_count": len(locations),
     }
@@ -611,6 +681,67 @@ async def api_match(request: Request):
     return _run(profile, geo, options.get("all") is True or request.query_params.get("all") == "1", origin)
 
 
+@router.post("/api/trials/inquire")
+async def api_inquire(request: Request):
+    """Save and intermediate a patient inquiry to a trial's Principal Investigator."""
+    origin = request.headers.get("origin")
+    try:
+        body = await request.json()
+    except Exception:
+        body = None
+    if not isinstance(body, dict):
+        return trial_json({"error": "Invalid JSON body provided."}, 400, origin)
+
+    nct_id = str(body.get("nct_id", "")).strip().upper()
+    if not NCT_PATTERN.match(nct_id):
+        return trial_json({"error": "Invalid or missing NCT study identifier."}, 400, origin)
+
+    message = str(body.get("message", "")).strip()
+    if not message:
+        return trial_json({"error": "Please enter a message to intermediate with the study team."}, 400, origin)
+
+    pi_info = body.get("principal_investigator") or {}
+    if not isinstance(pi_info, dict):
+        pi_info = {}
+
+    inquiry_record = {
+        "nct_id": nct_id,
+        "trial_title": str(body.get("trial_title", "")).strip(),
+        "pi_name": str(body.get("pi_name") or pi_info.get("name") or "Principal Investigator").strip(),
+        "pi_role": str(body.get("pi_role") or pi_info.get("role") or "Principal Investigator").strip(),
+        "pi_affiliation": str(body.get("pi_affiliation") or pi_info.get("affiliation") or "").strip(),
+        "message": message,
+        "patient_notes": str(body.get("patient_notes", "")).strip(),
+        "intermediation_status": "queued_for_intermediation",
+        "source": str(body.get("source", "connected")),
+        "created_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+    }
+
+    inquiry_id = storage.save_trial_inquiry(inquiry_record)
+
+    return trial_json({
+        "success": True,
+        "inquiry_id": inquiry_id,
+        "nct_id": nct_id,
+        "intermediary_status": "queued_for_intermediation",
+        "message": f"Inquiry successfully received. Nudge Lab will intermediate your message with {inquiry_record['pi_name']} while safeguarding your direct contact details.",
+        "record": {
+            "id": inquiry_id,
+            "nct_id": nct_id,
+            "pi_name": inquiry_record["pi_name"],
+            "created_at": inquiry_record["created_at"],
+        },
+    }, 201, origin)
+
+
+@router.get("/api/trials/inquiries")
+def api_list_inquiries(request: Request, nct_id: str | None = None):
+    """Retrieve saved trial inquiries."""
+    origin = request.headers.get("origin")
+    records = storage.list_trial_inquiries(nct_id)
+    return trial_json({"inquiries": records}, 200, origin)
+
+
 @router.get("/api/trials/{nct_id}")
 def api_trial(nct_id: str, request: Request, source: str = "connected"):
     origin = request.headers.get("origin")
@@ -632,6 +763,7 @@ def api_trial(nct_id: str, request: Request, source: str = "connected"):
         "trial": summarize_study(study, geo),
         "match": match_study(study, profile) if profile else None,
     }, origin=origin)
+
 
 
 

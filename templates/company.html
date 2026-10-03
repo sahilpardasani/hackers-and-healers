@@ -53,10 +53,10 @@
               {{ trial.status }}
             </span>
             <span class="tag-nct">{{ trial.nct_id }}</span>
-            <span class="tag-nct" style="color: #60a5fa;">Protocol: {{ trial.protocol_id }}</span>
+            <span class="tag-nct" style="color: #0284c7;">Protocol: {{ trial.protocol_id }}</span>
           </div>
           <div style="font-size: 0.85rem; color: var(--text-muted);">
-            Investigational Agent: <strong style="color: #fff;">{{ trial.drug_name }}</strong> ({{ trial.drug_class }})
+            Investigational Agent: <strong style="color: var(--text-white); font-weight: 700;">{{ trial.drug_name }}</strong> ({{ trial.drug_class }})
           </div>
         </div>
 
@@ -259,7 +259,7 @@
                 </div>
               </div>
 
-              <div style="margin-top: 1rem; padding-top: 0.75rem; border-top: 1px solid rgba(255, 255, 255, 0.05); font-size: 0.78rem; color: var(--text-dim);">
+              <div style="margin-top: 1rem; padding-top: 0.75rem; border-top: 1px solid var(--border-light); font-size: 0.78rem; color: var(--text-dim);">
                 💡 <strong>How Data Acquisition Works:</strong> Once funded, Nudge Lab sends a digital lab requisition to the patient's local vault. 100% of the stipend is deposited into escrow and paid to the patient upon verified lab delivery.
               </div>
             </div>
@@ -322,7 +322,7 @@
         </div>
         <div class="modal-row">
           <span>Sponsor Escrow Amount:</span>
-          <span id="modal-bounty-amount" style="color: #34d399;">$350.00 USD</span>
+          <span id="modal-bounty-amount" style="color: #059669; font-weight: 700;">$350.00 USD</span>
         </div>
         <div class="modal-row">
           <span>Patient Compensation:</span>

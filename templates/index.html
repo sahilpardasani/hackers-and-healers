@@ -394,9 +394,13 @@
         </div><span class="step-chip">ClinicalTrials.gov</span>
       </div>
       <section class="card">
-        <h2>Start with your record</h2>
-        <p>Source: {{ 'fictional Maya sample' if sample_mode else connection.display_name }}. Your stored FHIR JSON is
-          read locally to find age, recorded sex, conditions, and supported lab values.</p>
+        <div class="section-heading">
+          <div>
+            <h2>Your Trial Matching Profile</h2>
+            <p class="muted">Your stored FHIR record is pre-screened on-device to identify matching conditions and eligibility criteria for ClinicalTrials.gov studies.</p>
+          </div>
+          <span class="step-chip">Private Pre-Screen</span>
+        </div>
         <div id="trial-profile" aria-live="polite">Reading your local record…</div>
         <p class="fine-print">Lab-derived topics are search suggestions, not diagnoses. Records may be old or
           incomplete. Pregnancy, breastfeeding, medications, and other criteria still need study-team review.</p>
@@ -524,6 +528,153 @@
 
     <div class="toast" data-toast role="status" aria-live="polite"></div>
     {% endif %}
+
+    <!-- Trial Interest & Intermediation Modal -->
+    <div id="trial-interest-modal" class="trial-modal-backdrop" hidden role="dialog" aria-modal="true" aria-labelledby="trial-modal-title">
+      <div class="trial-modal-container">
+        <div class="trial-modal-header">
+          <div>
+            <div class="trial-modal-badge">
+              <span class="shield-icon">🛡️</span> Privacy-Preserving Intermediation
+            </div>
+            <h2 id="trial-modal-title">Connect with Study Team</h2>
+            <p class="trial-modal-subtitle">Nudge Lab intermediates your inquiry with the Principal Investigator so your raw medical records and personal details stay private.</p>
+          </div>
+          <button type="button" class="trial-modal-close" aria-label="Close dialog">&times;</button>
+        </div>
+
+        <div id="trial-modal-form-view">
+          <!-- Selected Study Banner -->
+          <div class="trial-modal-study-box">
+            <span id="trial-modal-nct" class="step-chip"></span>
+            <h3 id="trial-modal-study-title"></h3>
+          </div>
+
+          <!-- Section 1: Who will be contacted -->
+          <div class="trial-modal-section">
+            <div class="section-label-row">
+              <span class="section-num">1</span>
+              <div>
+                <h4 class="section-heading-sm">Investigator Who Will Be Contacted</h4>
+                <p class="section-subtext">Sourced directly from the official ClinicalTrials.gov study registration</p>
+              </div>
+            </div>
+            <div class="pi-callout-card">
+              <div class="pi-avatar" aria-hidden="true">🩺</div>
+              <div class="pi-details">
+                <strong id="trial-modal-pi-name" class="pi-name">Principal Investigator</strong>
+                <div id="trial-modal-pi-role" class="pi-role">Lead Investigator</div>
+                <div id="trial-modal-pi-affiliation" class="pi-affiliation">Lead Medical Center</div>
+              </div>
+              <span class="pi-badge">Study Lead</span>
+            </div>
+            <div class="intermediation-notice">
+              <span class="notice-sparkle">✦</span>
+              <p><strong>Nudge Lab Intermediation:</strong> Your inquiry will be forwarded by Nudge Lab to this investigator's research team. We never expose your personal phone, home address, or raw EHR data.</p>
+            </div>
+          </div>
+
+          <!-- Section 2: Patient Rights -->
+          <div class="trial-modal-section">
+            <div class="section-label-row">
+              <span class="section-num">2</span>
+              <div>
+                <h4 class="section-heading-sm">Your Rights as a Potential Participant</h4>
+                <p class="section-subtext">Key principles safeguarding you before, during, and after inquiring</p>
+              </div>
+            </div>
+            <div class="rights-grid">
+              <div class="right-item">
+                <div class="right-icon">🌱</div>
+                <div>
+                  <strong>100% Voluntary</strong>
+                  <p>Inquiring never obligates you to participate. You can decline at any point without impacting your regular medical care.</p>
+                </div>
+              </div>
+              <div class="right-item">
+                <div class="right-icon">📋</div>
+                <div>
+                  <strong>Mandatory Informed Consent</strong>
+                  <p>No procedures or tests occur until you receive, review, and sign a full Informed Consent Form (ICF) detailing all risks and benefits.</p>
+                </div>
+              </div>
+              <div class="right-item">
+                <div class="right-icon">🔒</div>
+                <div>
+                  <strong>Protected Privacy Buffer</strong>
+                  <p>We present a privacy-shielded eligibility profile. No third parties can scrape or market to your contact info.</p>
+                </div>
+              </div>
+              <div class="right-item">
+                <div class="right-icon">💬</div>
+                <div>
+                  <strong>Right to Ask Any Question</strong>
+                  <p>You can freely ask about visit frequency, travel stipends, potential side effects, or remote telehealth options.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Section 3: Patient Message -->
+          <div class="trial-modal-section">
+            <div class="section-label-row">
+              <span class="section-num">3</span>
+              <div>
+                <h4 class="section-heading-sm">Your Message to the Investigator</h4>
+                <p class="section-subtext">Draft your introduction or specific questions. We'll intermediate this securely.</p>
+              </div>
+            </div>
+
+            <div class="prompt-chips-label">Click to append suggested questions:</div>
+            <div class="prompt-chips">
+              <button type="button" class="prompt-chip" data-chip="Are travel reimbursements or remote telehealth visits supported?">+ Travel / remote visits?</button>
+              <button type="button" class="prompt-chip" data-chip="What is the anticipated appointment schedule and overall study duration?">+ Schedule & duration?</button>
+              <button type="button" class="prompt-chip" data-chip="Could you provide the full Informed Consent Form (ICF) and protocol overview?">+ Informed Consent doc?</button>
+              <button type="button" class="prompt-chip" data-chip="Are there specific medication washouts or restrictions required?">+ Medication restrictions?</button>
+            </div>
+
+            <textarea id="trial-modal-message-input" class="trial-modal-textarea" rows="4" placeholder="Draft your note to the Principal Investigator..."></textarea>
+
+            <div class="patient-note-field">
+              <label for="trial-modal-notes-input"><strong>Preferred follow-up timing or notes</strong> <span class="muted">(optional)</span></label>
+              <input type="text" id="trial-modal-notes-input" class="trial-modal-input" placeholder="e.g. Prefer email updates via Nudge Lab portal; weekday afternoons">
+            </div>
+
+            <label class="consent-row modal-consent-row">
+              <input type="checkbox" id="trial-modal-consent-check" checked>
+              <span>I authorize Nudge Lab to intermediate my inquiry and share my matching pre-screen eligibility parameters with the Principal Investigator.</span>
+            </label>
+          </div>
+
+          <div id="trial-modal-error" class="notice notice-warning" style="display: none; margin: 12px 0;"></div>
+
+          <div class="trial-modal-footer">
+            <button type="button" class="button button-secondary trial-modal-cancel">Cancel</button>
+            <button type="button" id="trial-modal-submit-btn" class="button button-primary trial-modal-submit">
+              <span class="btn-text">Send Intermediated Inquiry</span>
+              <span class="btn-spinner" style="display: none;"></span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Success Confirmation View -->
+        <div id="trial-modal-success-view" class="trial-modal-success" style="display: none;">
+          <div class="success-icon-wrap">✓</div>
+          <h3>Inquiry Sent to Nudge Lab Intermediary</h3>
+          <p id="trial-modal-success-msg" class="success-copy">Your interest has been logged securely. Nudge Lab is preparing your privacy-shielded eligibility profile for the study team.</p>
+          
+          <div class="success-summary-card">
+            <div class="success-row"><span>Study:</span><strong id="success-trial-title">-</strong></div>
+            <div class="success-row"><span>Investigator:</span><strong id="success-pi-name">-</strong></div>
+            <div class="success-row"><span>Intermediation Status:</span><span class="status-pill-queued">Queued for Intermediation</span></div>
+            <div class="success-row"><span>Privacy Shield:</span><span class="shield-badge">Active · Raw EHR & Contact Protected</span></div>
+          </div>
+
+          <p class="success-next-steps"><strong>What happens next:</strong> Our clinical coordination team reviews your questions, forwards the shielded summary to the PI's coordinator, and routes any response directly back to your secure dashboard.</p>
+          <button type="button" class="button button-primary trial-modal-done-btn">Back to Clinical Trials</button>
+        </div>
+      </div>
+    </div>
   </main>
   <footer class="footer"><span>Patient Agency · prototype</span><a href="{{ url_for('terms') }}">Terms &amp;
       conditions</a></footer>

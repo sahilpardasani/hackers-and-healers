@@ -6,6 +6,7 @@ import hashlib
 import json
 import os
 import sqlite3
+import time
 from pathlib import Path
 
 from cryptography.fernet import Fernet, MultiFernet, InvalidToken
@@ -39,6 +40,7 @@ def _db() -> sqlite3.Connection:
     db.execute("PRAGMA journal_mode=WAL")
     db.execute("CREATE TABLE IF NOT EXISTS connection (singleton INTEGER PRIMARY KEY CHECK(singleton=1), payload TEXT NOT NULL, last_sync_at TEXT)")
     db.execute("CREATE TABLE IF NOT EXISTS fhir_records (record_key TEXT PRIMARY KEY, namespace TEXT NOT NULL DEFAULT '', encrypted_payload TEXT NOT NULL)")
+    db.execute("CREATE TABLE IF NOT EXISTS trial_inquiries (id INTEGER PRIMARY KEY AUTOINCREMENT, nct_id TEXT NOT NULL, created_at TEXT NOT NULL, encrypted_payload TEXT NOT NULL)")
     columns = {row[1] for row in db.execute("PRAGMA table_info(fhir_records)")}
     if "namespace" not in columns:
         db.execute("ALTER TABLE fhir_records ADD COLUMN namespace TEXT NOT NULL DEFAULT ''")
@@ -110,3 +112,41 @@ def record_counts(namespace: str | None = None) -> dict[str, int]:
         resource_type = str(item.get("resourceType", "Resource"))
         counts[resource_type] = counts.get(resource_type, 0) + 1
     return counts
+
+
+def save_trial_inquiry(inquiry: dict) -> int:
+    token = _cipher().encrypt(json.dumps(inquiry, separators=(",", ":"), ensure_ascii=False).encode()).decode()
+    created_at = inquiry.get("created_at") or time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+    nct_id = str(inquiry.get("nct_id") or "")
+    with _db() as db:
+        cur = db.execute(
+            "INSERT INTO trial_inquiries(nct_id, created_at, encrypted_payload) VALUES (?, ?, ?)",
+            (nct_id, created_at, token),
+        )
+        return cur.lastrowid or 0
+
+
+def list_trial_inquiries(nct_id: str | None = None) -> list[dict]:
+    with _db() as db:
+        if nct_id:
+            rows = db.execute(
+                "SELECT id, nct_id, created_at, encrypted_payload FROM trial_inquiries WHERE nct_id=? ORDER BY id DESC",
+                (nct_id,),
+            ).fetchall()
+        else:
+            rows = db.execute(
+                "SELECT id, nct_id, created_at, encrypted_payload FROM trial_inquiries ORDER BY id DESC"
+            ).fetchall()
+    cipher = _cipher()
+    items = []
+    for row_id, row_nct, created_at, encrypted in rows:
+        try:
+            payload = json.loads(cipher.decrypt(encrypted.encode()).decode())
+            payload["id"] = row_id
+            payload["nct_id"] = row_nct
+            payload["created_at"] = created_at
+            items.append(payload)
+        except Exception:
+            continue
+    return items
+
