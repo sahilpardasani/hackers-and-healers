@@ -1,0 +1,51 @@
+{
+  "resourceType": "Bundle",
+  "type": "collection",
+  "meta": {"tag": [{"code": "synthetic", "display": "Synthetic test patient. Not real PHI."}]},
+  "entry": [
+    {"resource": {"resourceType": "Patient", "id": "sample-1", "gender": "female", "birthDate": "1968-04-12",
+      "name": [{"given": ["Sample"], "family": "Patient"}], "address": [{"city": "Boston", "state": "MA", "postalCode": "02118"}]}},
+
+    {"resource": {"resourceType": "Condition", "id": "cond-ckd", "clinicalStatus": {"coding": [{"code": "active"}]},
+      "category": [{"coding": [{"code": "problem-list-item"}]}],
+      "code": {"text": "Chronic kidney disease stage 3a", "coding": [{"system": "http://hl7.org/fhir/sid/icd-10-cm", "code": "N18.31", "display": "Chronic kidney disease, stage 3a"}]}}},
+    {"resource": {"resourceType": "Condition", "id": "cond-t2d", "clinicalStatus": {"coding": [{"code": "active"}]},
+      "category": [{"coding": [{"code": "problem-list-item"}]}],
+      "code": {"text": "Type 2 diabetes mellitus with hyperglycemia", "coding": [{"system": "http://hl7.org/fhir/sid/icd-10-cm", "code": "E11.65"}]}}},
+    {"resource": {"resourceType": "Condition", "id": "cond-htn", "clinicalStatus": {"coding": [{"code": "active"}]},
+      "category": [{"coding": [{"code": "problem-list-item"}]}],
+      "code": {"text": "Essential (primary) hypertension", "coding": [{"system": "http://hl7.org/fhir/sid/icd-10-cm", "code": "I10"}]}}},
+    {"resource": {"resourceType": "Condition", "id": "cond-old", "clinicalStatus": {"coding": [{"code": "resolved"}]},
+      "category": [{"coding": [{"code": "problem-list-item"}]}],
+      "code": {"text": "Acute bronchitis", "coding": [{"system": "http://hl7.org/fhir/sid/icd-10-cm", "code": "J20.9"}]}}},
+
+    {"resource": {"resourceType": "Observation", "id": "egfr-1", "status": "final", "category": [{"coding": [{"code": "laboratory"}]}],
+      "code": {"text": "eGFR (CKD-EPI 2021)", "coding": [{"system": "http://loinc.org", "code": "98979-8"}]},
+      "effectiveDateTime": "2025-09-15", "valueQuantity": {"value": 56, "unit": "mL/min/1.73m2"}}},
+    {"resource": {"resourceType": "Observation", "id": "egfr-2", "status": "final", "category": [{"coding": [{"code": "laboratory"}]}],
+      "code": {"text": "eGFR (CKD-EPI 2021)", "coding": [{"system": "http://loinc.org", "code": "98979-8"}]},
+      "effectiveDateTime": "2026-08-20", "valueQuantity": {"value": 48, "unit": "mL/min/1.73m2"}}},
+    {"resource": {"resourceType": "Observation", "id": "a1c-1", "status": "final", "category": [{"coding": [{"code": "laboratory"}]}],
+      "code": {"text": "Hemoglobin A1c", "coding": [{"system": "http://loinc.org", "code": "4548-4"}]},
+      "effectiveDateTime": "2026-02-10", "valueQuantity": {"value": 7.9, "unit": "%"}}},
+    {"resource": {"resourceType": "Observation", "id": "a1c-2", "status": "final", "category": [{"coding": [{"code": "laboratory"}]}],
+      "code": {"text": "Hemoglobin A1c", "coding": [{"system": "http://loinc.org", "code": "4548-4"}]},
+      "effectiveDateTime": "2026-08-20", "valueQuantity": {"value": 7.4, "unit": "%"}}},
+
+    {"resource": {"resourceType": "Observation", "id": "bmi-1", "status": "final", "category": [{"coding": [{"code": "vital-signs"}]}],
+      "code": {"text": "BMI", "coding": [{"system": "http://loinc.org", "code": "39156-5"}]},
+      "effectiveDateTime": "2026-08-20", "valueQuantity": {"value": 31.2, "unit": "kg/m2"}}},
+    {"resource": {"resourceType": "Observation", "id": "bp-1", "status": "final", "category": [{"coding": [{"code": "vital-signs"}]}],
+      "code": {"text": "Blood pressure panel", "coding": [{"system": "http://loinc.org", "code": "85354-9"}]},
+      "effectiveDateTime": "2026-08-20",
+      "component": [
+        {"code": {"coding": [{"system": "http://loinc.org", "code": "8480-6"}]}, "valueQuantity": {"value": 138, "unit": "mmHg"}},
+        {"code": {"coding": [{"system": "http://loinc.org", "code": "8462-4"}]}, "valueQuantity": {"value": 84, "unit": "mmHg"}}
+      ]}},
+
+    {"resource": {"resourceType": "MedicationRequest", "id": "med-1", "status": "active", "intent": "order",
+      "medicationCodeableConcept": {"text": "metformin 1000 mg tablet"}}},
+    {"resource": {"resourceType": "MedicationRequest", "id": "med-2", "status": "active", "intent": "order",
+      "medicationCodeableConcept": {"text": "lisinopril 20 mg tablet"}}}
+  ]
+}

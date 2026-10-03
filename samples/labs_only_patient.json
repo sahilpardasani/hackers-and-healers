@@ -1,0 +1,18 @@
+{
+  "resourceType": "Bundle",
+  "type": "collection",
+  "meta": {"tag": [{"code": "synthetic", "display": "Synthetic test patient. Not real PHI."}]},
+  "entry": [
+    {"resource": {"resourceType": "Patient", "id": "labs-only-1", "gender": "male", "birthDate": "1959-02-27"}},
+    {"resource": {"resourceType": "Observation", "id": "egfr", "status": "final",
+      "code": {"text": "eGFR", "coding": [{"system": "http://loinc.org", "code": "33914-3"}]},
+      "effectiveDateTime": "2026-07-01", "valueQuantity": {"value": 38, "unit": "mL/min/1.73m2"}}},
+    {"resource": {"resourceType": "Observation", "id": "a1c", "status": "final",
+      "code": {"text": "Hemoglobin A1c", "coding": [{"system": "http://loinc.org", "code": "4548-4"}]},
+      "effectiveDateTime": "2026-07-01", "valueQuantity": {"value": 6.8, "unit": "%"}}},
+    {"resource": {"resourceType": "Observation", "id": "bp", "status": "final",
+      "code": {"coding": [{"system": "http://loinc.org", "code": "85354-9"}]}, "effectiveDateTime": "2026-07-01",
+      "component": [{"code": {"coding": [{"system": "http://loinc.org", "code": "8480-6"}]}, "valueQuantity": {"value": 152, "unit": "mmHg"}},
+                    {"code": {"coding": [{"system": "http://loinc.org", "code": "8462-4"}]}, "valueQuantity": {"value": 88, "unit": "mmHg"}}]}}
+  ]
+}

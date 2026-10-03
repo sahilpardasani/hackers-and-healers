@@ -20,6 +20,7 @@ from flask import Flask, abort, redirect, render_template, render_template_strin
 load_dotenv()
 
 import endpoint_directory
+import clinicaltrial
 import storage
 from ckm import summarize
 from local_server import server_options
@@ -37,6 +38,7 @@ FHIR_TIMEOUT = (5, 45)
 MAX_PAGES_PER_QUERY = 100
 
 app = Flask(__name__)
+app.register_blueprint(clinicaltrial.trials)
 app.secret_key = os.getenv("FLASK_SECRET_KEY") or secrets.token_hex(32)
 app.config.update(SESSION_COOKIE_HTTPONLY=True, SESSION_COOKIE_SAMESITE="Lax",
                   SESSION_COOKIE_SECURE=urlparse(REDIRECT_URI).scheme == "https")
@@ -49,7 +51,11 @@ SYNC_QUERIES = {
     "labs": ("Observation", {"category": "laboratory"}, "date"),
     "vitals": ("Observation", {"category": "vital-signs"}, "date"),
     "medications": ("MedicationRequest", {}, "authoredon"),
+    # Problem list for trial matching; always fetched in full so resolved items update.
+    "conditions": ("Condition", {"category": "problem-list-item"}, None),
 }
+# Needs Condition.Search / Patient.Read in the app registration; skip if not enabled.
+OPTIONAL_QUERIES = {"conditions", "patient"}
 
 PAGE = """<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Hackers &amp; Healers</title><style>
@@ -70,7 +76,8 @@ h1{font-size:2rem}.muted{opacity:.72}.card{border:1px solid #8885;border-radius:
 {% else %}<section class="card"><h2>Sync status</h2><p>Connected to <code>{{ connection.display_name or connection.fhir_base_url }}</code></p>
 <p>Last sync: {{ last_sync or 'Not synced yet' }} · {{ 'Daily sync enabled' if connection.refresh_token else 'Reconnect required after this session expires' }}</p>
 <form class="inline" method="post" action="{{ url_for('sync_now') }}"><button>Sync now</button></form>
-<form class="inline" method="post" action="{{ url_for('disconnect') }}"><button>Disconnect</button></form></section>
+<form class="inline" method="post" action="{{ url_for('disconnect') }}"><button>Disconnect</button></form>
+<a class="button" href="{{ url_for('trials.trials_page') }}">Find clinical trials</a></section>
 <section class="card"><h2>CKM overview</h2><div class="metrics">
 <div class="metric">Latest eGFR<strong>{{ metric_text(metrics.latest_egfr) }}</strong></div>
 <div class="metric">Average blood pressure<strong>{{ pressure_text(metrics) }}</strong><span class="muted">{{ metrics.blood_pressure_count }} readings</span></div>
@@ -151,7 +158,7 @@ def _fhir_get(url: str, token: str, base_url: str) -> dict:
 def fetch_bundle(connection: dict, resource_type: str, params: dict) -> list[dict]:
     token = connection["access_token"]
     base = connection["fhir_base_url"].rstrip("/")
-    url = f"{base}/{resource_type}?{urlencode(params)}"
+    url = f"{base}/{resource_type}" + (f"?{urlencode(params)}" if params else "")
     collected = []
     for _ in range(MAX_PAGES_PER_QUERY):
         bundle = _fhir_get(url, token, base)
@@ -171,6 +178,15 @@ def fetch_bundle(connection: dict, resource_type: str, params: dict) -> list[dic
     return collected
 
 
+def _fetch_optional(label: str, fetch) -> list[dict]:
+    try:
+        return fetch()
+    except requests.HTTPError as exc:
+        if label in OPTIONAL_QUERIES and exc.response is not None and exc.response.status_code in (403, 404):
+            return []
+        raise
+
+
 def sync_connection(connection: dict, last_sync_at: str | None) -> dict:
     connection = _refresh_connection(connection)
     patient_id = connection.get("patient_id")
@@ -181,11 +197,14 @@ def sync_connection(connection: dict, last_sync_at: str | None) -> dict:
     counts: dict[str, int] = {}
     for label, (resource_type, params, date_param) in SYNC_QUERIES.items():
         query = {**params, "patient": patient_id, "_count": "100"}
-        if since:
+        if since and date_param:
             query[date_param] = f"ge{since}"
-        resources = fetch_bundle(connection, resource_type, query)
+        resources = _fetch_optional(label, lambda: fetch_bundle(connection, resource_type, query))
         fetched.extend(resources)
         counts[label] = len(resources)
+    patient = _fetch_optional("patient", lambda: fetch_bundle(connection, f"Patient/{quote(patient_id, safe='')}", {}))
+    fetched.extend(patient)
+    counts["patient"] = len(patient)
     stored = storage.save_resources(fetched, namespace=connection["fhir_base_url"])
     synced_at = datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
     storage.save_connection(connection, last_sync_at=synced_at)

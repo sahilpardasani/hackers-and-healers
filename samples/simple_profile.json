@@ -1,0 +1,6 @@
+{
+  "age": 45,
+  "sex": "male",
+  "conditions": ["heart failure", "type 2 diabetes"],
+  "labs": {"egfr": 72, "a1c": 8.1, "bmi": 29.5, "systolic": 128}
+}
