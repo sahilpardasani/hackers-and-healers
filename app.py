@@ -22,6 +22,7 @@ load_dotenv()
 import endpoint_directory
 import storage
 from ckm import summarize
+from dashboard import appointment_views, condition_views, coverage_views, medication_views, observation_views, patient_view
 from local_server import server_options
 
 FHIR_BASE_URL = os.getenv("FHIR_BASE_URL", "https://fhir.epic.com/interconnect-fhir-oauth/api/FHIR/R4").strip().rstrip("/")
@@ -213,18 +214,28 @@ def index():
     connection_item = storage.load_connection()
     connection = connection_item[0] if connection_item else None
     last_sync = connection_item[1] if connection_item else None
-    records = storage.load_resources("Observation") if connection else []
+    namespace = connection.get("fhir_base_url") if connection else None
+    records = storage.load_resources(namespace=namespace) if connection else []
+    labs, vitals = observation_views(records)
     metrics = summarize(records)
-    return render_template_string(
-        PAGE,
+    return render_template(
+        "index.html",
         error=error,
         connection=connection,
         base_url=FHIR_BASE_URL,
         endpoints=_known_endpoints(),
         client_ready=bool(CLIENT_ID and CLIENT_SECRET and os.getenv("DATA_ENCRYPTION_KEY")),
         last_sync=last_sync,
-        counts=storage.record_counts() if connection else {},
+        counts=storage.record_counts(namespace=namespace) if connection else {},
         metrics=metrics,
+        patient=patient_view(records) if connection else {},
+        labs=labs,
+        vitals=vitals,
+        conditions=condition_views(records),
+        medications=medication_views(records),
+        appointments=appointment_views(records),
+        coverage=coverage_views(records),
+        sync_warnings=connection.get("last_sync_warnings", []) if connection else [],
         metric_text=lambda item: f"{item['value']:g} {item['unit']}" if item else "No result",
         pressure_text=lambda item: f"{item['systolic_average'] or '—'}/{item['diastolic_average'] or '—'} mmHg",
     )
@@ -238,6 +249,8 @@ def terms():
 
 @app.post("/connect")
 def connect():
+    if request.form.get("consent") != "yes":
+        return redirect(url_for("index", error="Please acknowledge the privacy and medical-information notice before connecting."))
     selected_url = request.form.get("endpoint", "").rstrip("/")
     selected = next((item for item in _known_endpoints() if item["url"] == selected_url), None)
     if not selected:

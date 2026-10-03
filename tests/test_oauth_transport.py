@@ -60,7 +60,7 @@ class OAuthTransportTests(unittest.TestCase):
                 patch.object(service.storage, "save_connection") as save, \
                 patch.object(service.threading, "Thread"):
             client = service.app.test_client()
-            authorization = client.post("/connect", data={"endpoint": base}, base_url="https://127.0.0.1:3000")
+            authorization = client.post("/connect", data={"endpoint": base, "consent": "yes"}, base_url="https://127.0.0.1:3000")
             params = parse_qs(urlparse(authorization.location).query)
             self.assertEqual(params["redirect_uri"], [callback])
             completed = client.get("/callback", query_string={"state": params["state"][0], "code": "test-code"},
