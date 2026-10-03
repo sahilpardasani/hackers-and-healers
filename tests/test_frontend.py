@@ -18,7 +18,7 @@ class FrontendContractTests(unittest.TestCase):
 
     def test_tabs_have_accessible_tabpanel_contract(self):
         targets = re.findall(r'data-tab-target="([^"]+)"', TEMPLATE)
-        self.assertEqual(targets, ["today", "journey", "progress", "visit", "my-data"])
+        self.assertEqual(targets, ["today", "journey", "progress", "visit", "trials", "my-data"])
         for target in targets:
             self.assertIn(f'aria-controls="panel-{target}"', TEMPLATE)
             self.assertIn(f'aria-labelledby="tab-{target}"', TEMPLATE)

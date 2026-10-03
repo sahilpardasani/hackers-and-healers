@@ -1,0 +1,20 @@
+{
+  "resourceType": "Bundle",
+  "type": "collection",
+  "meta": {"tag": [{"code": "synthetic", "display": "Synthetic test patient. Not real PHI."}]},
+  "entry": [
+    {"resource": {"resourceType": "Patient", "id": "pp-1", "gender": "female", "birthDate": "1992-06-03"}},
+    {"resource": {"resourceType": "Condition", "id": "c1", "clinicalStatus": {"coding": [{"code": "active"}]},
+      "code": {"text": "Prediabetes", "coding": [{"system": "http://hl7.org/fhir/sid/icd-10-cm", "code": "R73.03"}]}}},
+    {"resource": {"resourceType": "Condition", "id": "c2", "clinicalStatus": {"coding": [{"code": "active"}]},
+      "code": {"text": "Obesity, unspecified", "coding": [{"system": "http://hl7.org/fhir/sid/icd-10-cm", "code": "E66.9"}]}}},
+    {"resource": {"resourceType": "Condition", "id": "c3", "clinicalStatus": {"coding": [{"code": "resolved"}]},
+      "code": {"text": "Gestational diabetes mellitus", "coding": [{"system": "http://hl7.org/fhir/sid/icd-10-cm", "code": "O24.419"}]}}},
+    {"resource": {"resourceType": "Observation", "id": "a1c", "status": "final",
+      "code": {"coding": [{"system": "http://loinc.org", "code": "4548-4"}]}, "effectiveDateTime": "2026-08-01", "valueQuantity": {"value": 6.1, "unit": "%"}}},
+    {"resource": {"resourceType": "Observation", "id": "bmi", "status": "final",
+      "code": {"coding": [{"system": "http://loinc.org", "code": "39156-5"}]}, "effectiveDateTime": "2026-08-01", "valueQuantity": {"value": 33.4, "unit": "kg/m2"}}},
+    {"resource": {"resourceType": "MedicationRequest", "id": "m1", "status": "active", "intent": "order",
+      "medicationCodeableConcept": {"text": "tirzepatide 5 mg/0.5 mL pen"}}}
+  ]
+}

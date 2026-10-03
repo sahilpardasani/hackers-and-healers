@@ -1,5 +1,10 @@
 // Demo-only explainer shown next to the phone frame on desktop.
 const CONTENT = {
+  trials: {
+    title: 'Clinical trials: explore research',
+    data: ['Current record → minimal local matching profile', 'ClinicalTrials.gov API v2 → public recruiting studies', 'Local pre-screen → reasons and questions for the study team'],
+    why: 'Only search topics leave the local backend. Matching is preliminary; historical labs and incomplete criteria require study-team review.'
+  },
   connect: {
     title: 'Connect: SMART on FHIR',
     data: ['SMART standalone launch (PKCE) via fhirclient', 'SMART Health IT sandbox or Epic sandbox', 'Demo mode: synthetic FHIR R4 Bundle "Maya"'],

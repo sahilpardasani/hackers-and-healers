@@ -12,7 +12,8 @@ export const TABS = [
   { id: 'journey', label: 'Journey', ic: '🧭' },
   { id: 'progress', label: 'Progress', ic: '📈' },
   { id: 'data', label: 'My data', ic: '🔗' },
-  { id: 'visit', label: 'Visit prep', ic: '🩺' }
+  { id: 'visit', label: 'Visit prep', ic: '🩺' },
+  { id: 'trials', label: 'Trials', ic: '🔬' }
 ];
 
 export function BottomNav({ tab, onChange }) {

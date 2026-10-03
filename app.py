@@ -20,6 +20,7 @@ from flask import Flask, abort, redirect, render_template, render_template_strin
 load_dotenv()
 
 import endpoint_directory
+import clinicaltrial
 import storage
 from sample_data import SAMPLE_NAMESPACE, sample_resources
 from ckm import summarize
@@ -41,6 +42,7 @@ FHIR_TIMEOUT = (5, 45)
 MAX_PAGES_PER_QUERY = 100
 
 app = Flask(__name__)
+app.register_blueprint(clinicaltrial.trials)
 app.secret_key = os.getenv("FLASK_SECRET_KEY") or secrets.token_hex(32)
 app.config.update(SESSION_COOKIE_HTTPONLY=True, SESSION_COOKIE_SAMESITE="Lax",
                   SESSION_COOKIE_SECURE=urlparse(REDIRECT_URI).scheme == "https")
@@ -52,7 +54,7 @@ sync_lock = threading.Lock()
 SYNC_QUERIES = {
     "labs": ("Observation", {"category": "laboratory"}, "date"),
     "vitals": ("Observation", {"category": "vital-signs"}, "date"),
-    "conditions": ("Condition", {}, "recorded-date"),
+    "conditions": ("Condition", {"category": "problem-list-item"}, None),
     "medications": ("MedicationRequest", {}, "authoredon"),
     "appointments": ("Appointment", {}, "date"),
     "coverage": ("Coverage", {}, "_lastUpdated"),
@@ -238,7 +240,7 @@ def fetch_resource(connection: dict, resource_type: str, resource_id: str) -> di
 def fetch_bundle(connection: dict, resource_type: str, params: dict) -> list[dict]:
     token = connection["access_token"]
     base = connection["fhir_base_url"].rstrip("/")
-    url = f"{base}/{resource_type}?{urlencode(params)}"
+    url = f"{base}/{resource_type}" + (f"?{urlencode(params)}" if params else "")
     collected = []
     for _ in range(MAX_PAGES_PER_QUERY):
         bundle = _fhir_get(url, token, base)
@@ -277,7 +279,7 @@ def sync_connection(connection: dict, last_sync_at: str | None) -> dict:
 
     for label, (resource_type, params, date_param) in SYNC_QUERIES.items():
         query = {**params, "patient": patient_id, "_count": "100"}
-        if since:
+        if since and date_param:
             query[date_param] = f"ge{since}"
         try:
             resources = fetch_bundle(connection, resource_type, query)

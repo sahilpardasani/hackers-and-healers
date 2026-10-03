@@ -55,6 +55,14 @@ The dashboard shows the patient's demographics, recent labs and vitals, conditio
 
 After setting a local encryption key and starting the app, choose **Load sample records** on the home page. This imports the bundled fictional Maya fixture and opens `/sample`; `/sample.json` exposes that same synthetic FHIR bundle. The sample is stored separately from Epic records, does not create an OAuth connection, and is clearly labeled as fictional. No downloaded Epic patient data or credentials are included in this repository.
 
+## Clinical trials
+
+Open the **Clinical trials** tab after syncing or loading the fictional sample. It previews a profile derived locally from the selected source's FHIR JSON, then asks permission to send search topics (and optional coordinates) to ClinicalTrials.gov's public API v2. No Epic secret is needed for trial listings, and names, identifiers, birth dates, medication lists, and lab values are not sent to ClinicalTrials.gov.
+
+The matcher checks supported units, separates demo records from the connected patient, and labels lab-derived topics as suggestions—not diagnoses. Listings include reasons, potential barriers, unreviewed criteria, sites, and official study links. Results are limited and do not establish eligibility; old or incomplete records require study-team review. See [CLINICAL_TRIALS.md](CLINICAL_TRIALS.md) for JSON inputs and API details.
+
+The separate React frontend also has a **Trials** tab. Start this Python backend, then run `npm install` and `npm run dev` in `patient-agency-react`; Vite proxies `/api/trials` to the local HTTPS backend. React sends a minimal profile from its own current record, not another patient stored in the Python database. A static GitHub Pages deployment alone cannot run this backend.
+
 ## Tests
 
 ```sh

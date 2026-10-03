@@ -13,6 +13,19 @@ from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.x509.oid import NameOID
 
 
+class _DeferredHandshakeContext(ssl.SSLContext):
+    """Run each TLS handshake in its request thread, not the accept loop.
+
+    Werkzeug wraps the listening socket, so by default every handshake runs
+    inside accept(). One idle browser connection (e.g. a preconnect) then
+    blocks all other clients.
+    """
+
+    def wrap_socket(self, sock, *args, **kwargs):
+        kwargs["do_handshake_on_connect"] = False
+        return super().wrap_socket(sock, *args, **kwargs)
+
+
 def server_options(redirect_uri: str, cert_dir: Path | None = None) -> dict:
     """Serve the same scheme/port as the registered callback, on loopback only.
 
@@ -56,7 +69,7 @@ def server_options(redirect_uri: str, cert_dir: Path | None = None) -> dict:
         cert_path.write_bytes(cert.public_bytes(serialization.Encoding.PEM))
     if not cert_path.is_file() or not key_path.is_file():
         raise RuntimeError("The local TLS certificate/key pair is incomplete in data/local-tls.")
-    context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+    context = _DeferredHandshakeContext(ssl.PROTOCOL_TLS_SERVER)
     context.minimum_version = ssl.TLSVersion.TLSv1_2
     context.load_cert_chain(cert_path, key_path)
     options["ssl_context"] = context

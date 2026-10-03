@@ -9,8 +9,9 @@ import Progress from './screens/Progress.jsx';
 import MyData from './screens/MyData.jsx';
 import VisitPrep from './screens/VisitPrep.jsx';
 import VoiceAgent from './components/VoiceAgent.jsx';
+import ClinicalTrials from './screens/ClinicalTrials.jsx';
 
-const SCREENS = { today: Today, journey: Journey, progress: Progress, data: MyData, visit: VisitPrep };
+const SCREENS = { today: Today, journey: Journey, progress: Progress, data: MyData, visit: VisitPrep, trials: ClinicalTrials };
 
 export default function App() {
   const { state } = useStore();

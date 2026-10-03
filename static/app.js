@@ -81,6 +81,7 @@
       activateTab(tabs[nextIndex].dataset.tabTarget, { focus: true, scroll: false });
     });
   });
+  if (window.location.hash === '#trials') activateTab('trials', { scroll: false });
 
   const logKey = 'patient-agency.logs.v1';
   const logsForToday = () => storage.read(logKey, {})[today()] || {};

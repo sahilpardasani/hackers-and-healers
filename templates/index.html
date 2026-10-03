@@ -80,6 +80,7 @@
       <button id="tab-journey" class="tab" role="tab" aria-controls="panel-journey" aria-selected="false" tabindex="-1" data-tab-target="journey">Journey</button>
       <button id="tab-progress" class="tab" role="tab" aria-controls="panel-progress" aria-selected="false" tabindex="-1" data-tab-target="progress">Progress</button>
       <button id="tab-visit" class="tab" role="tab" aria-controls="panel-visit" aria-selected="false" tabindex="-1" data-tab-target="visit">Visit prep</button>
+      <button id="tab-trials" class="tab" role="tab" aria-controls="panel-trials" aria-selected="false" tabindex="-1" data-tab-target="trials">Clinical trials</button>
       <button id="tab-my-data" class="tab" role="tab" aria-controls="panel-my-data" aria-selected="false" tabindex="-1" data-tab-target="my-data">My data</button>
     </nav>
 
@@ -131,6 +132,19 @@
       <section class="card"><div class="section-heading"><h2>Appointments</h2><span class="record-count">{{ appointments|length }}</span></div>{% if appointments %}<ul class="record-list">{% for row in appointments %}<li><span><strong>{{ row.display }}</strong><small>{{ row.date }}</small></span><em>{{ row.status }}</em></li>{% endfor %}</ul>{% else %}<p class="empty-state">No appointments synced.</p>{% endif %}</section>
     </section>
 
+    <section id="panel-trials" class="tab-panel" role="tabpanel" aria-labelledby="tab-trials" tabindex="0" data-tab-panel="trials" hidden>
+      <div class="section-heading"><div><p class="eyebrow">Research, made easier to explore</p><h1>Clinical trials</h1><p class="muted">Studies to discuss with your clinician—not a determination that you qualify.</p></div><span class="step-chip">ClinicalTrials.gov</span></div>
+      <section class="card"><h2>Start with your record</h2><p>Source: {{ 'fictional Maya sample' if sample_mode else connection.display_name }}. Your stored FHIR JSON is read locally to find age, recorded sex, conditions, and supported lab values.</p><div id="trial-profile" aria-live="polite">Reading your local record…</div><p class="fine-print">Lab-derived topics are search suggestions, not diagnoses. Records may be old or incomplete. Pregnancy, breastfeeding, medications, and other criteria still need study-team review.</p></section>
+      <form id="trial-search-form" class="card">
+        <h2>Explore recruiting studies</h2><p>Only the displayed condition/search topics and optional coordinates are sent to ClinicalTrials.gov. Your name, identifiers, birth date, medications, and lab values are not sent there. No Epic secret is used for this search.</p>
+        <div class="trial-location"><label>Latitude (optional)<input name="lat" type="number" step="any" min="-90" max="90" placeholder="42.36"></label><label>Longitude (optional)<input name="lon" type="number" step="any" min="-180" max="180" placeholder="-71.06"></label><label>Radius (miles)<input name="miles" type="number" min="1" max="500" value="100"></label></div>
+        <label class="consent-row"><input id="trial-consent" type="checkbox" required><span>I agree to send these search topics and any coordinates I enter to ClinicalTrials.gov.</span></label>
+        <label class="consent-row"><input name="all" type="checkbox"><span>Also show studies with possible eligibility barriers.</span></label>
+        <button id="trial-search-button" class="button button-primary" disabled>Find clinical trials</button>
+      </form>
+      <p id="trial-status" role="status" aria-live="polite"></p><div id="trial-results" class="trial-results"></div>
+    </section>
+
     <section id="panel-my-data" class="tab-panel" role="tabpanel" aria-labelledby="tab-my-data" tabindex="0" data-tab-panel="my-data" hidden>
       <div class="section-heading"><div><p class="eyebrow">Your data, your choice</p><h1>My data</h1><p class="muted">Everything stays local to this prototype.</p></div></div>
       <section class="card source-card"><div class="source-card-icon">⌁</div><div><p class="eyebrow">{{ 'Sample source' if sample_mode else 'Connected source' }}</p><h2>{{ connection.display_name or connection.fhir_base_url }}</h2><p class="muted">{% if sample_mode %}Loaded from the repository’s fictional Maya FHIR bundle.{% else %}Last sync: {{ last_sync or 'Not synced yet' }}{% endif %}</p></div><span class="connected-label">{{ 'Synthetic' if sample_mode else 'Connected' }}</span></section>
@@ -147,5 +161,6 @@
   </main>
   <footer class="footer"><span>Patient Agency · prototype</span><a href="{{ url_for('terms') }}">Terms &amp; conditions</a></footer>
   <script src="{{ url_for('static', filename='app.js') }}"></script>
+  <script src="{{ url_for('static', filename='trials.js') }}"></script>
 </body>
 </html>

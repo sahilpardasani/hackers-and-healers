@@ -91,12 +91,12 @@ export function normalize(input, source = 'Demo record') {
           if (lb) ctx.weights.push({ date, lb, source });
         } else if (hasCode(r.code, LOINC.bmi) || /body mass index|\bbmi\b/i.test(textOf(r.code))) {
           const v = r.valueQuantity?.value;
-          if (v && (!ctx.bmiLatest || date > ctx.bmiLatest.date)) ctx.bmiLatest = { value: v, date, source };
+          if (v && (!ctx.bmiLatest || date > ctx.bmiLatest.date)) ctx.bmiLatest = { value: v, date, source, unit: r.valueQuantity?.code || r.valueQuantity?.unit || '' };
         } else if (hasCode(r.code, LOINC.height)) {
           ctx.heightCm = r.valueQuantity?.value ?? ctx.heightCm;
         } else if (hasCode(r.code, LOINC.a1c) || /a1c/i.test(textOf(r.code))) {
           const v = r.valueQuantity?.value;
-          if (v) ctx.a1c.push({ date, value: v, source });
+          if (v) ctx.a1c.push({ date, value: v, source, unit: r.valueQuantity?.code || r.valueQuantity?.unit || '' });
         }
         break;
       }
