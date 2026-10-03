@@ -1,10 +1,12 @@
 (() => {
   'use strict';
 
+  const storageKey = key => document.body.dataset.sampleMode === 'true' ? `sample.${key}` : key;
+
   const storage = {
     read(key, fallback) {
       try {
-        const value = JSON.parse(localStorage.getItem(key));
+        const value = JSON.parse(localStorage.getItem(storageKey(key)));
         return value ?? fallback;
       } catch {
         return fallback;
@@ -12,7 +14,7 @@
     },
     write(key, value) {
       try {
-        localStorage.setItem(key, JSON.stringify(value));
+        localStorage.setItem(storageKey(key), JSON.stringify(value));
         return true;
       } catch {
         return false;

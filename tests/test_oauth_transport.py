@@ -8,6 +8,7 @@ from unittest.mock import Mock, patch
 from urllib.parse import parse_qs, urlparse
 
 from cryptography import x509
+import requests
 
 import app as service
 from local_server import server_options
@@ -44,6 +45,22 @@ class OAuthTransportTests(unittest.TestCase):
         service.pending_auth.clear()
         self.addCleanup(service.pending_auth.clear)
 
+    def test_blank_scope_is_omitted_but_pkce_and_state_remain(self):
+        base = "https://ehr.example.test/FHIR/R4"
+        with patch.object(service, "SCOPES", "   "), \
+                patch.object(service, "_configured_client_ready", return_value=True), \
+                patch.object(service, "_known_endpoints", return_value=[{"name": "Test", "url": base}]), \
+                patch.object(service, "_metadata", return_value={"authorization_endpoint": "https://ehr.example.test/authorize", "token_endpoint": "https://ehr.example.test/token"}):
+            client = service.app.test_client()
+            response = client.post("/connect", data={"endpoint": base, "consent": "yes"}, base_url="https://127.0.0.1:3000")
+            self.assertEqual(response.status_code, 302)
+            params = parse_qs(urlparse(response.location).query, keep_blank_values=True)
+            self.assertNotIn("scope", params)
+            self.assertEqual(params["aud"], [base])
+            self.assertEqual(params["code_challenge_method"], ["S256"])
+            self.assertTrue(params["state"][0])
+            self.assertTrue(params["code_challenge"][0])
+
     def test_authorization_and_token_exchange_use_same_https_callback_with_pkce(self):
         base = "https://ehr.example.test/FHIR/R4"
         callback = "https://127.0.0.1:3000/callback"
@@ -54,6 +71,7 @@ class OAuthTransportTests(unittest.TestCase):
         with patch.object(service, "REDIRECT_URI", callback), \
                 patch.object(service, "CLIENT_ID", "test-client"), \
                 patch.object(service, "CLIENT_SECRET", "test-secret"), \
+                patch.object(service, "OAUTH_CLIENT_MODE", "confidential"), \
                 patch.object(service, "_known_endpoints", return_value=[{"name": "Test", "url": base}]), \
                 patch.object(service, "_metadata", return_value=metadata), \
                 patch.object(service.requests, "post", return_value=response) as exchange, \
@@ -69,6 +87,8 @@ class OAuthTransportTests(unittest.TestCase):
             self.assertEqual(completed.location, "/")
             data = exchange.call_args.kwargs["data"]
             self.assertEqual(data["redirect_uri"], callback)
+            self.assertNotIn("client_id", data)
+            self.assertIn("Authorization", exchange.call_args.kwargs["headers"])
             challenge = base64.urlsafe_b64encode(hashlib.sha256(data["code_verifier"].encode()).digest()).rstrip(b"=").decode()
             self.assertEqual(params["code_challenge"], [challenge])
             save.assert_called_once()
@@ -76,6 +96,73 @@ class OAuthTransportTests(unittest.TestCase):
             client.get("/callback", query_string={"state": params["state"][0], "code": "test-code"},
                        base_url="https://127.0.0.1:3000")
             exchange.assert_not_called()
+
+    def test_public_pkce_client_sends_client_id_without_basic_and_discards_refresh_token(self):
+        base = "https://ehr.example.test/FHIR/R4"
+        callback = "https://127.0.0.1:3000/callback"
+        metadata = {"authorization_endpoint": "https://ehr.example.test/authorize",
+                    "token_endpoint": "https://ehr.example.test/token"}
+        response = Mock()
+        response.json.return_value = {"access_token": "test-only", "patient": "synthetic",
+                                      "refresh_token": "must-not-be-saved"}
+        with patch.object(service, "REDIRECT_URI", callback), \
+                patch.object(service, "CLIENT_ID", "public-client"), \
+                patch.object(service, "CLIENT_SECRET", ""), \
+                patch.object(service, "OAUTH_CLIENT_MODE", "public"), \
+                patch.object(service, "SCOPES", "launch/patient offline_access"), \
+                patch.object(service, "_known_endpoints", return_value=[{"name": "Test", "url": base}]), \
+                patch.object(service, "_metadata", return_value=metadata), \
+                patch.object(service.requests, "post", return_value=response) as exchange, \
+                patch.object(service.storage, "save_connection") as save, \
+                patch.object(service.threading, "Thread"):
+            client = service.app.test_client()
+            authorization = client.post("/connect", data={"endpoint": base, "consent": "yes"}, base_url="https://127.0.0.1:3000")
+            params = parse_qs(urlparse(authorization.location).query)
+            self.assertEqual(params["scope"], ["launch/patient"])
+            completed = client.get("/callback", query_string={"state": params["state"][0], "code": "test-code"},
+                                   base_url="https://127.0.0.1:3000")
+            self.assertEqual(completed.status_code, 302)
+            data = exchange.call_args.kwargs["data"]
+            self.assertEqual(data["client_id"], "public-client")
+            self.assertNotIn("Authorization", exchange.call_args.kwargs["headers"])
+            connection = save.call_args.args[0]
+            self.assertEqual(connection["oauth_client_mode"], "public")
+            self.assertEqual(connection["refresh_token"], "")
+
+    def test_invalid_client_json_error_is_safe_and_mode_specific(self):
+        base = "https://ehr.example.test/FHIR/R4"
+        callback = "https://127.0.0.1:3000/callback"
+        metadata = {"authorization_endpoint": "https://ehr.example.test/authorize",
+                    "token_endpoint": "https://ehr.example.test/token"}
+        response = Mock(status_code=400)
+        response.json.return_value = {
+            "error": "invalid_client",
+            "error_description": "client_secret=do-not-display-this",
+        }
+        response.raise_for_status.side_effect = requests.HTTPError(response=response)
+        with patch.object(service, "REDIRECT_URI", callback), \
+                patch.object(service, "CLIENT_ID", "public-client"), \
+                patch.object(service, "CLIENT_SECRET", "do-not-display-this"), \
+                patch.object(service, "OAUTH_CLIENT_MODE", "public"), \
+                patch.object(service, "_known_endpoints", return_value=[{"name": "Test", "url": base}]), \
+                patch.object(service, "_metadata", return_value=metadata), \
+                patch.object(service.requests, "post", return_value=response):
+            client = service.app.test_client()
+            authorization = client.post("/connect", data={"endpoint": base, "consent": "yes"}, base_url="https://127.0.0.1:3000")
+            params = parse_qs(urlparse(authorization.location).query)
+            completed = client.get("/callback", query_string={"state": params["state"][0], "code": "test-code"},
+                                   base_url="https://127.0.0.1:3000")
+            self.assertEqual(completed.status_code, 302)
+            location = completed.location
+            self.assertIn("invalid_client", location)
+            self.assertIn("non-confidential", location)
+            self.assertNotIn("do-not-display-this", location)
+
+    def test_confidential_client_header_uses_epic_url_encoded_secret(self):
+        with patch.object(service, "CLIENT_ID", "test-client"), \
+                patch.object(service, "CLIENT_SECRET", "secret+/="):
+            encoded = service._client_auth_header()["Authorization"]
+        self.assertEqual(encoded, "Basic dGVzdC1jbGllbnQ6c2VjcmV0JTJCJTJGJTNE")
 
 
 if __name__ == "__main__":

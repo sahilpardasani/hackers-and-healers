@@ -1,0 +1,476 @@
+{
+  "resourceType": "Bundle",
+  "type": "collection",
+  "entry": [
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "maya-demo-001",
+        "name": [
+          {
+            "given": [
+              "Maya"
+            ],
+            "family": "Demo"
+          }
+        ],
+        "gender": "female",
+        "birthDate": "1994-03-14"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Observation",
+        "id": "vs-1",
+        "status": "final",
+        "subject": {
+          "reference": "Patient/maya-demo-001"
+        },
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "vital-signs"
+              }
+            ]
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "8302-2",
+              "display": "Body height"
+            }
+          ],
+          "text": "Body height"
+        },
+        "effectiveDateTime": "2026-07-17",
+        "valueQuantity": {
+          "value": 165,
+          "unit": "cm",
+          "system": "http://unitsofmeasure.org",
+          "code": "cm"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Observation",
+        "id": "vs-2",
+        "status": "final",
+        "subject": {
+          "reference": "Patient/maya-demo-001"
+        },
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "vital-signs"
+              }
+            ]
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "29463-7",
+              "display": "Body weight"
+            }
+          ],
+          "text": "Body weight"
+        },
+        "effectiveDateTime": "2026-07-17",
+        "valueQuantity": {
+          "value": 88.9,
+          "unit": "kg",
+          "system": "http://unitsofmeasure.org",
+          "code": "kg"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Observation",
+        "id": "vs-3",
+        "status": "final",
+        "subject": {
+          "reference": "Patient/maya-demo-001"
+        },
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "vital-signs"
+              }
+            ]
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "39156-5",
+              "display": "Body mass index"
+            }
+          ],
+          "text": "Body mass index"
+        },
+        "effectiveDateTime": "2026-07-17",
+        "valueQuantity": {
+          "value": 32.6,
+          "unit": "kg/m2",
+          "system": "http://unitsofmeasure.org",
+          "code": "kg/m2"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Observation",
+        "id": "vs-4",
+        "status": "final",
+        "subject": {
+          "reference": "Patient/maya-demo-001"
+        },
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "vital-signs"
+              }
+            ]
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "29463-7",
+              "display": "Body weight"
+            }
+          ],
+          "text": "Body weight"
+        },
+        "effectiveDateTime": "2026-08-28",
+        "valueQuantity": {
+          "value": 86.3,
+          "unit": "kg",
+          "system": "http://unitsofmeasure.org",
+          "code": "kg"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Observation",
+        "id": "vs-5",
+        "status": "final",
+        "subject": {
+          "reference": "Patient/maya-demo-001"
+        },
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "vital-signs"
+              }
+            ]
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "29463-7",
+              "display": "Body weight"
+            }
+          ],
+          "text": "Body weight"
+        },
+        "effectiveDateTime": "2026-09-25",
+        "valueQuantity": {
+          "value": 84.1,
+          "unit": "kg",
+          "system": "http://unitsofmeasure.org",
+          "code": "kg"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Observation",
+        "id": "lab-6",
+        "status": "final",
+        "subject": {
+          "reference": "Patient/maya-demo-001"
+        },
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "laboratory"
+              }
+            ]
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "4548-4",
+              "display": "Hemoglobin A1c"
+            }
+          ],
+          "text": "Hemoglobin A1c"
+        },
+        "effectiveDateTime": "2024-02-12",
+        "valueQuantity": {
+          "value": 5.7,
+          "unit": "%"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Observation",
+        "id": "lab-7",
+        "status": "final",
+        "subject": {
+          "reference": "Patient/maya-demo-001"
+        },
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "laboratory"
+              }
+            ]
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "4548-4",
+              "display": "Hemoglobin A1c"
+            }
+          ],
+          "text": "Hemoglobin A1c"
+        },
+        "effectiveDateTime": "2025-09-08",
+        "valueQuantity": {
+          "value": 5.9,
+          "unit": "%"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Observation",
+        "id": "lab-8",
+        "status": "final",
+        "subject": {
+          "reference": "Patient/maya-demo-001"
+        },
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "laboratory"
+              }
+            ]
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "2345-7",
+              "display": "Glucose"
+            }
+          ],
+          "text": "Glucose"
+        },
+        "effectiveDateTime": "2025-09-08",
+        "valueQuantity": {
+          "value": 104,
+          "unit": "mg/dL"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Condition",
+        "id": "cond-9",
+        "subject": {
+          "reference": "Patient/maya-demo-001"
+        },
+        "clinicalStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-clinical",
+              "code": "active"
+            }
+          ]
+        },
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/condition-category",
+                "code": "problem-list-item"
+              }
+            ]
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://hl7.org/fhir/sid/icd-10-cm",
+              "code": "R73.03",
+              "display": "Prediabetes"
+            }
+          ],
+          "text": "Prediabetes"
+        },
+        "onsetDateTime": "2025-09-08"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Condition",
+        "id": "cond-10",
+        "subject": {
+          "reference": "Patient/maya-demo-001"
+        },
+        "clinicalStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-clinical",
+              "code": "active"
+            }
+          ]
+        },
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/condition-category",
+                "code": "problem-list-item"
+              }
+            ]
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://hl7.org/fhir/sid/icd-10-cm",
+              "code": "Z86.32",
+              "display": "Personal history of gestational diabetes"
+            }
+          ],
+          "text": "Personal history of gestational diabetes"
+        },
+        "onsetDateTime": "2025-01-10"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "MedicationRequest",
+        "id": "med-11",
+        "status": "completed",
+        "intent": "order",
+        "subject": {
+          "reference": "Patient/maya-demo-001"
+        },
+        "authoredOn": "2026-07-31",
+        "medicationCodeableConcept": {
+          "coding": [
+            {
+              "system": "http://www.nlm.nih.gov/research/umls/rxnorm",
+              "code": "2601723",
+              "display": "Zepbound 2.5 MG/0.5ML Auto-Injector (tirzepatide)"
+            }
+          ],
+          "text": "Zepbound 2.5 MG/0.5ML Auto-Injector (tirzepatide)"
+        },
+        "dosageInstruction": [
+          {
+            "text": "Inject 2.5 mg subcutaneously once weekly"
+          }
+        ]
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "MedicationRequest",
+        "id": "med-12",
+        "status": "active",
+        "intent": "order",
+        "subject": {
+          "reference": "Patient/maya-demo-001"
+        },
+        "authoredOn": "2026-08-28",
+        "medicationCodeableConcept": {
+          "coding": [
+            {
+              "system": "http://www.nlm.nih.gov/research/umls/rxnorm",
+              "code": "2601723",
+              "display": "Zepbound 5 MG/0.5ML Auto-Injector (tirzepatide)"
+            }
+          ],
+          "text": "Zepbound 5 MG/0.5ML Auto-Injector (tirzepatide)"
+        },
+        "dosageInstruction": [
+          {
+            "text": "Inject 5 mg subcutaneously once weekly"
+          }
+        ]
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "MedicationRequest",
+        "id": "med-13",
+        "status": "active",
+        "intent": "order",
+        "subject": {
+          "reference": "Patient/maya-demo-001"
+        },
+        "authoredOn": "2026-01-15",
+        "medicationCodeableConcept": {
+          "coding": [],
+          "text": "Norethindrone acetate 1 MG / Ethinyl estradiol 0.02 MG oral tablet"
+        },
+        "dosageInstruction": [
+          {
+            "text": "Take 1 tablet by mouth daily"
+          }
+        ]
+      }
+    }
+  ],
+  "meta": {
+    "tag": [
+      {
+        "system": "https://patient-agency.local/data-origin",
+        "code": "synthetic",
+        "display": "Fictional demo data; not an Epic patient record"
+      }
+    ]
+  },
+  "identifier": {
+    "system": "https://github.com/sahilpardasani/hackers-and-healers",
+    "value": "patient-agency-react/src/data/mayaBundle.js"
+  }
+}

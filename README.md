@@ -1,13 +1,13 @@
 # Hackers & Healers
 
-A local-first SMART on FHIR sync demo inspired by [FHIR_EPIC](https://github.com/narges-rzv/FHIR_EPIC). A patient connects through their health system's own sign-in and consent page. The app then syncs labs, vital signs, and medication requests, follows FHIR pagination links, stores records encrypted on the local machine, and displays a small CKM-oriented dashboard.
+A local-first SMART on FHIR sync demo inspired by [FHIR_EPIC](https://github.com/narges-rzv/FHIR_EPIC). A patient connects through their health system's own sign-in and consent page. The app then syncs patient demographics, labs, vital signs, conditions, medication requests when enabled, appointments, and coverage; follows FHIR pagination links; stores records encrypted on the local machine; and displays them in a CKM-oriented dashboard.
 
-The patient completes the first MyChart sign-in and clicks Allow themselves. This app does not ask for, collect, or fill in MyChart passwords. It uses OAuth authorization code with PKCE and requests `offline_access` so it can refresh access when the health system grants a refresh token.
+The patient completes the first MyChart sign-in and clicks Allow themselves. This app does not ask for, collect, or fill in MyChart passwords. It uses OAuth authorization code with PKCE. `FHIR_SCOPES=` omits the scope parameter entirely, as in the reference repository. Persistent access must be explicitly configured with a compatible confidential registration and `offline_access`.
 
 ## Run the Epic sandbox demo
 
 1. Create an app in the [Epic FHIR developer portal](https://fhir.epic.com/). Configure its redirect URI as `https://127.0.0.1:3000/callback` and enable the patient-facing read scopes and refresh/offline access supported by the app registration. Use its **non-production** Client ID for the Epic sandbox.
-2. Copy `.env.example` to `.env`, then fill in your own client ID and client secret. Keep `.env` private; it is ignored by Git.
+2. Copy `.env.example` to `.env`, then fill in your own non-production client ID. The example uses the verified sandbox flow, `EPIC_OAUTH_CLIENT_MODE=public`, with no secret. Match this to your Epic registration; a confidential registration instead requires `EPIC_OAUTH_CLIENT_MODE=confidential` and its matching sandbox secret. Keep `.env` private; it is ignored by Git.
 3. Generate a local encryption key and add it to `.env`:
 
    ```sh
@@ -29,17 +29,37 @@ The server uses the scheme and port in `REDIRECT_URI`. HTTPS creates a persisten
 
 If Epic shows **The request is invalid**, check the saved Endpoint URI against `REDIRECT_URI` character for character. `http://` and `https://` are different redirect URIs. A sandbox probe for this project returned an authorization error for HTTP but accepted HTTPS, so the local demo now defaults to HTTPS. Start each attempt with **Continue to MyChart**; signing into the sandbox MyChart home page directly does not authorize this app. Epic app-setting updates may take up to an hour to propagate.
 
+### Public PKCE fallback
+
+If Epic has registered the app as a **non-confidential** client, set `EPIC_OAUTH_CLIENT_MODE=public` and remove the client secret from local configuration. The app still uses S256 PKCE, omits HTTP Basic client authentication, and sends `client_id` in the token request as required by Epic's non-confidential flow. This mode is an explicit fallback: it only works for an Epic app registered as non-confidential, and it never persists or refreshes with a refresh token. The app also removes `offline_access` from the authorization request in this mode. Reconnect when the access token expires.
+
+Match the token method to the Epic registration. `invalid_client` can indicate rejected credentials or an authentication-method mismatch; it does not identify which by itself. This project's sandbox flow was verified on October 3, 2026: a fresh patient-authorized login using public mode successfully exchanged the code, fetched FHIR records, saved them in the encrypted local database, and rendered the dashboard. Public mode never sends `CLIENT_SECRET`, even if it remains in the local environment. It requires reconnection after token expiry; it does not enable unattended daily refresh.
+
 The default FHIR base URL is Epic's R4 sandbox: `https://fhir.epic.com/interconnect-fhir-oauth/api/FHIR/R4`. A local endpoint directory is refreshed from Epic weekly; choose an organization from the list before consent. You can set `FHIR_BASE_URL` and `HEALTH_SYSTEM_NAME` in `.env` to use a specific endpoint directly.
 
 ## What syncs
 
 - `Observation?category=laboratory` for lab results, including common eGFR and A1c codes.
 - `Observation?category=vital-signs` for blood pressure and other vitals.
-- `MedicationRequest` for medication orders.
+- `Patient` for the authorized patient's demographics.
+- `Condition` for the problem list.
+- `MedicationRequest` and referenced `Medication` resources when the app registration grants those APIs.
+- `Appointment` and `Coverage` for visit and insurance information.
 - Bundle `next` links are followed, with a page limit to avoid runaway requests.
 - Later runs add a FHIR date lower bound based on the previous successful sync. Resources are upserted by a one-way hash of type and FHIR ID, so repeated pages do not duplicate rows.
+- If an optional API is not enabled or unavailable, successful resource types are still saved and the dashboard identifies the skipped category.
 
-The dashboard shows fetched record counts, latest eGFR, A1c history, and mean systolic/diastolic blood pressure when those values exist in the records. These summaries are informational and are not clinical advice.
+The dashboard shows the patient's demographics, recent labs and vitals, conditions, medications, appointments, coverage, fetched record counts, latest eGFR, A1c history, and mean systolic/diastolic blood pressure when those values exist in the records. Records are filtered by FHIR base URL so changing health systems cannot mix data on the dashboard. These summaries are informational and are not clinical advice.
+
+## Try the fictional sample without Epic
+
+After setting a local encryption key and starting the app, choose **Load sample records** on the home page. This imports the bundled fictional Maya fixture and opens `/sample`; `/sample.json` exposes that same synthetic FHIR bundle. The sample is stored separately from Epic records, does not create an OAuth connection, and is clearly labeled as fictional. No downloaded Epic patient data or credentials are included in this repository.
+
+## Tests
+
+```sh
+python -m unittest discover -s tests -v
+```
 
 ## Privacy and operational limits
 
@@ -58,4 +78,5 @@ See `.env.example`. Never commit `.env`, an encryption key, OAuth credentials, a
 
 - [Epic sandbox and customer endpoint directory](https://open.epic.com/MyApps/Endpoints?exp=default&v=1)
 - [Epic developer resources](https://open.epic.com/DeveloperResources)
+- [Epic OAuth 2.0 patient-facing app documentation](https://fhir.epic.com/Documentation?docId=patientfacingfhirapps&section=AutomaticClientDistribution)
 - [SMART App Launch](https://hl7.org/fhir/smart-app-launch/)

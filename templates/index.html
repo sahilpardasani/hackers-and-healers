@@ -7,7 +7,7 @@
   <title>Patient Agency</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
 </head>
-<body>
+<body data-sample-mode="{{ 'true' if sample_mode else 'false' }}">
   <a class="skip-link" href="#main-content">Skip to main content</a>
   <header class="topbar">
     <a class="brand" href="{{ url_for('index') }}" aria-label="Patient Agency home">
@@ -18,6 +18,7 @@
   </header>
 
   <main id="main-content" class="shell">
+    {% if sample_mode %}<div class="notice notice-warning" role="status"><span>Sample data · Maya is fictional. These records came from the bundled demo JSON, not Epic. <a href="{{ url_for('index') }}">Return to MyChart connection</a> · <a href="{{ url_for('sample_json') }}">View sample JSON</a></span></div>{% endif %}
     {% if error %}<div class="notice notice-warning" role="alert"><span class="notice-icon">!</span><span>{{ error }}</span></div>{% endif %}
 
     {% if not connection %}
@@ -49,6 +50,10 @@
       </form>
       {% endif %}
       <p class="fine-print"><span class="lock">⌑</span> Sandbox and synthetic data only for this prototype.</p>
+    </section>
+
+    <section class="demo-card">
+      <div><h2>Explore the full dashboard</h2><p class="muted">Load Maya’s fictional FHIR records into the local database. No MyChart login needed.</p><form method="post" action="{{ url_for('load_sample') }}"><button class="button button-primary" type="submit">Load sample records</button></form></div>
     </section>
 
     <section class="demo-card">
@@ -86,7 +91,7 @@
       <div class="metric-grid">
         <div class="metric-card"><span>Latest eGFR</span><strong>{% if metrics.latest_egfr %}{{ metrics.latest_egfr.value|round(1) }} {{ metrics.latest_egfr.unit }}{% else %}Not found{% endif %}</strong><small>from your record</small></div>
         <div class="metric-card"><span>Blood pressure</span><strong>{{ pressure_text(metrics) }}</strong><small>{{ metrics.blood_pressure_count }} readings</small></div>
-        <div class="metric-card"><span>Records synced</span><strong>{{ counts.values()|sum }}</strong><small>encrypted on this device</small></div>
+        <div class="metric-card"><span>{{ 'Sample records loaded' if sample_mode else 'Records synced' }}</span><strong>{{ counts.values()|sum }}</strong><small>encrypted on this device</small></div>
       </div>
       {% if sync_warnings %}<div class="notice notice-warning"><span class="notice-icon">!</span><span>Some optional record categories were unavailable: {{ sync_warnings|join(', ') }}. Available records were still saved.</span></div>{% endif %}
 
@@ -128,9 +133,13 @@
 
     <section id="panel-my-data" class="tab-panel" role="tabpanel" aria-labelledby="tab-my-data" tabindex="0" data-tab-panel="my-data" hidden>
       <div class="section-heading"><div><p class="eyebrow">Your data, your choice</p><h1>My data</h1><p class="muted">Everything stays local to this prototype.</p></div></div>
-      <section class="card source-card"><div class="source-card-icon">⌁</div><div><p class="eyebrow">Connected source</p><h2>{{ connection.display_name or connection.fhir_base_url }}</h2><p class="muted">Last sync: {{ last_sync or 'Not synced yet' }}</p></div><span class="connected-label">Connected</span></section>
+      <section class="card source-card"><div class="source-card-icon">⌁</div><div><p class="eyebrow">{{ 'Sample source' if sample_mode else 'Connected source' }}</p><h2>{{ connection.display_name or connection.fhir_base_url }}</h2><p class="muted">{% if sample_mode %}Loaded from the repository’s fictional Maya FHIR bundle.{% else %}Last sync: {{ last_sync or 'Not synced yet' }}{% endif %}</p></div><span class="connected-label">{{ 'Synthetic' if sample_mode else 'Connected' }}</span></section>
+      {% if sample_mode %}
+      <section class="card"><h2>Sample record store</h2><p>{{ counts.values()|sum }} fictional records are stored separately from any Epic connection. No access token or scheduled sync is used.</p><a href="{{ url_for('sample_json') }}">View the stored FHIR JSON</a></section>
+      {% else %}
       <section class="card"><div class="section-heading"><h2>Local record store</h2><span class="record-count">{{ counts.values()|sum }}</span></div><p class="muted">FHIR records and refresh credentials are encrypted with your local key. Patient Agency does not send your record to a third-party analytics service.</p><div class="data-actions"><form method="post" action="{{ url_for('sync_now') }}"><button class="button button-primary" type="submit">Sync now</button></form><form method="post" action="{{ url_for('disconnect') }}"><button class="button button-danger" type="submit">Disconnect source</button></form></div></section>
       <section class="card privacy-card"><h2>Privacy reminder</h2><p>Disconnecting stops future syncs. This prototype does not delete existing encrypted local records yet; remove the local database when you want a full wipe.</p><a href="{{ url_for('terms') }}">Read terms and conditions →</a></section>
+      {% endif %}
     </section>
 
     <div class="toast" data-toast role="status" aria-live="polite"></div>
