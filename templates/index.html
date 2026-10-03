@@ -10,15 +10,23 @@
 <body data-sample-mode="{{ 'true' if sample_mode else 'false' }}">
   <a class="skip-link" href="#main-content">Skip to main content</a>
   <header class="topbar">
-    <a class="brand" href="{{ url_for('index') }}" aria-label="Patient Agency home">
+    <a class="brand" href="{{ url_for('app') }}" aria-label="Patient Agency home">
       <span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 48 48" role="img"><path d="M24 38V17"/><path d="M24 22C15 22 9 17 8 9c8 0 15 3 16 12"/><path d="M24 27c2-8 8-12 17-12-1 8-7 13-17 12"/><path d="M14 39h20"/></svg></span>
       <span><strong>Patient Agency</strong><small>your postpartum health companion</small></span>
     </a>
-    {% if connection %}<span class="topbar-status"><span class="status-dot"></span>Local &amp; private</span>{% endif %}
+    <div style="display: flex; align-items: center; gap: 1rem;">
+      <a href="{{ url_for('index') }}" style="color: #64748b; font-size: 0.9rem; text-decoration: none; font-weight: 500;">&larr; Commercial Site</a>
+      {% if connection %}
+        <span class="topbar-status"><span class="status-dot"></span>Local &amp; private</span>
+        <form method="post" action="{{ url_for('disconnect') }}" style="display: inline; margin: 0;">
+          <button type="submit" class="button button-danger" style="padding: 0.35rem 0.75rem; font-size: 0.8rem; border-radius: 6px; cursor: pointer;">Disconnect</button>
+        </form>
+      {% endif %}
+    </div>
   </header>
 
   <main id="main-content" class="shell">
-    {% if sample_mode %}<div class="notice notice-warning" role="status"><span>Sample data · Maya is fictional. These records came from the bundled demo JSON, not Epic. <a href="{{ url_for('index') }}">Return to MyChart connection</a> · <a href="{{ url_for('sample_json') }}">View sample JSON</a></span></div>{% endif %}
+    {% if sample_mode %}<div class="notice notice-warning" role="status"><span>Sample data · Maya is fictional. These records came from the bundled demo JSON, not Epic. <a href="{{ url_for('app') }}">Return to MyChart connection</a> · <a href="{{ url_for('sample_json') }}">View sample JSON</a></span></div>{% endif %}
     {% if error %}<div class="notice notice-warning" role="alert"><span class="notice-icon">!</span><span>{{ error }}</span></div>{% endif %}
 
     {% if not connection %}
@@ -71,9 +79,31 @@
 
     {% else %}
     <section class="app-intro">
-      <div><p class="eyebrow">Today</p><h1>Welcome back, {{ patient.name or 'there' }}.</h1><p class="muted">Small actions, grounded in your own health record.</p></div>
+      <div><p class="eyebrow">Today</p><h1>Welcome back, <span id="patient-name-display">{{ patient.name or 'there' }}</span>.</h1><p class="muted">Small actions, grounded in your own health record.</p></div>
       <div class="source-pill"><span class="status-dot"></span><span>{{ connection.display_name or 'Connected health record' }}</span></div>
     </section>
+
+    <div id="sync-tracker" class="sync-tracker-card card" {% if not sync_active and not (counts.values()|sum == 0 and not sample_mode) %}hidden{% endif %} aria-live="polite">
+      <div class="sync-tracker-content">
+        <div class="sync-spinner-wrap">
+          <div class="sync-spinner"></div>
+        </div>
+        <div class="sync-tracker-details">
+          <div class="sync-title-row">
+            <h2 id="sync-headline">Syncing health record…</h2>
+            <span id="sync-badge" class="sync-status-badge badge-active">Fetching data</span>
+          </div>
+          <p id="sync-stage" class="sync-stage-text muted">Connecting to {{ connection.display_name or 'Epic' }}…</p>
+          <div class="sync-progress-bar-wrap">
+            <div id="sync-progress-bar" class="sync-progress-bar-fill" style="width: 12%;"></div>
+          </div>
+          <div class="sync-tracker-footer">
+            <span id="sync-live-counts" class="sync-live-counts">0 records retrieved</span>
+            <span id="sync-step-count" class="sync-step-count">Step 1 of 6</span>
+          </div>
+        </div>
+      </div>
+    </div>
 
     <nav class="tabbar" aria-label="Patient Agency sections" role="tablist">
       <button id="tab-today" class="tab is-active" role="tab" aria-controls="panel-today" aria-selected="true" tabindex="0" data-tab-target="today">Today</button>

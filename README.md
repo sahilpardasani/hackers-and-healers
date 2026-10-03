@@ -1,3 +1,16 @@
+cd /Users/pavelovertchouk/projects/h2_project/hackers-and-healers
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+
+python app.py
+# https://127.0.0.1:3000/
+
+cd /Users/pavelovertchouk/projects/h2_project/hackers-and-healers/patient-agency-react
+npm install
+npm run dev
+
+
 # Hackers & Healers
 
 A local-first SMART on FHIR sync demo inspired by [FHIR_EPIC](https://github.com/narges-rzv/FHIR_EPIC). A patient connects through their health system's own sign-in and consent page. The app then syncs patient demographics, labs, vital signs, conditions, medication requests when enabled, appointments, and coverage; follows FHIR pagination links; stores records encrypted on the local machine; and displays them in a CKM-oriented dashboard.

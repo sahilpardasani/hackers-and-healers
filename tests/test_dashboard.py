@@ -24,6 +24,20 @@ class DashboardViewTests(unittest.TestCase):
         self.assertEqual(appointment_views(self.resources)[0]["display"], "Primary care")
         self.assertEqual(coverage_views(self.resources)[0]["display"], "Example Health Plan")
 
+    def test_sync_status_and_favicon_endpoints(self):
+        import app as service
+        client = service.app.test_client()
+        res = client.get("/sync/status")
+        self.assertEqual(res.status_code, 200)
+        data = res.get_json()
+        self.assertIn("active", data)
+        self.assertIn("stage", data)
+        self.assertIn("step", data)
+        self.assertIn("counts", data)
+        fav = client.get("/favicon.ico")
+        self.assertEqual(fav.status_code, 204)
+
 
 if __name__ == "__main__":
     unittest.main()
+

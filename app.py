@@ -13,9 +13,16 @@ from datetime import datetime, timezone
 from urllib.parse import quote, urlencode, urlparse
 
 import requests
+import uvicorn
 from apscheduler.schedulers.background import BackgroundScheduler
 from dotenv import load_dotenv
-from flask import Flask, abort, redirect, render_template, render_template_string, request, session, url_for
+from fastapi import FastAPI, Request, Response
+from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse, PlainTextResponse
+from fastapi.staticfiles import StaticFiles
+from fastapi.templating import Jinja2Templates
+from starlette.middleware.sessions import SessionMiddleware
+from fastapi.testclient import TestClient
+
 
 load_dotenv()
 
@@ -34,22 +41,134 @@ OAUTH_CLIENT_MODE = os.getenv("EPIC_OAUTH_CLIENT_MODE", "confidential").strip().
 if OAUTH_CLIENT_MODE not in {"confidential", "public"}:
     raise ValueError("EPIC_OAUTH_CLIENT_MODE must be 'confidential' or 'public'.")
 REDIRECT_URI = os.getenv("REDIRECT_URI", "https://127.0.0.1:3000/callback").strip()
-# Match the reference repo by omitting scope unless explicitly configured.
-# Epic can grant access based on the APIs selected in the app registration.
 SCOPES = os.getenv("FHIR_SCOPES", "").strip()
 SYNC_HOUR = int(os.getenv("SYNC_HOUR", "3"))
 FHIR_TIMEOUT = (5, 45)
 MAX_PAGES_PER_QUERY = 100
 
-app = Flask(__name__)
-app.register_blueprint(clinicaltrial.trials)
-app.secret_key = os.getenv("FLASK_SECRET_KEY") or secrets.token_hex(32)
-app.config.update(SESSION_COOKIE_HTTPONLY=True, SESSION_COOKIE_SAMESITE="Lax",
-                  SESSION_COOKIE_SECURE=urlparse(REDIRECT_URI).scheme == "https")
-logging.getLogger("werkzeug").setLevel(logging.ERROR)
+app = FastAPI(title="Hackers & Healers")
+USE_SSL = os.getenv("USE_SSL", "false").lower() in {"1", "true", "yes"}
+
+app.add_middleware(
+    SessionMiddleware,
+    secret_key=os.getenv("FLASK_SECRET_KEY") or secrets.token_hex(32),
+    session_cookie="session",
+    same_site="lax",
+    https_only=USE_SSL and urlparse(REDIRECT_URI).scheme == "https",
+)
+app.mount("/static", StaticFiles(directory="static"), name="static")
+app.include_router(clinicaltrial.router)
+app.extensions: dict = {}
+
+templates = Jinja2Templates(directory="templates")
+
+
+def custom_url_for(endpoint: str, **values):
+    if endpoint == "static":
+        filename = values.get("filename") or values.get("path")
+        return f"/static/{filename}"
+    endpoint_map = {
+        "index": "/",
+        "landing": "/",
+        "app": "/app",
+        "patient_app": "/app",
+        "sample": "/sample",
+        "sample_json": "/sample.json",
+        "sample_dashboard": "/sample",
+        "load_sample": "/sample/load",
+        "connect": "/connect",
+        "callback": "/callback",
+        "sync_now": "/sync",
+        "disconnect": "/disconnect",
+        "terms": "/terms",
+    }
+    url = endpoint_map.get(endpoint, f"/{endpoint}")
+    if values:
+        return f"{url}?{urlencode(values)}"
+    return url
+
+
+templates.env.globals["url_for"] = custom_url_for
+
+
+class ResponseWrapper:
+    def __init__(self, response):
+        self._response = response
+
+    @property
+    def status_code(self):
+        return self._response.status_code
+
+    @property
+    def headers(self):
+        return self._response.headers
+
+    @property
+    def location(self):
+        return self._response.headers.get("location")
+
+    def get_json(self):
+        return self._response.json()
+
+    def json(self):
+        return self._response.json()
+
+    def get_data(self, as_text=False):
+        return self._response.text if as_text else self._response.content
+
+    @property
+    def data(self):
+        return self._response.content
+
+    @property
+    def text(self):
+        return self._response.text
+
+
+    @property
+    def content(self):
+        return self._response.content
+
+
+class TestClientWrapper:
+    def __init__(self, test_client):
+        self._client = test_client
+
+    def get(self, url, *args, query_string=None, params=None, follow_redirects=False, **kwargs):
+        kwargs.pop("base_url", None)
+        p = params if params is not None else query_string
+        res = self._client.get(url, params=p, follow_redirects=follow_redirects, **kwargs)
+        return ResponseWrapper(res)
+
+    def post(self, url, *args, data=None, json=None, follow_redirects=False, **kwargs):
+        kwargs.pop("base_url", None)
+        res = self._client.post(url, data=data, json=json, follow_redirects=follow_redirects, **kwargs)
+        return ResponseWrapper(res)
+
+
+def app_test_client(base_url: str = "https://127.0.0.1:3000"):
+    from fastapi.testclient import TestClient
+    return TestClientWrapper(TestClient(app, base_url=base_url))
+
+
+app.test_client = app_test_client
+
+
+logger = logging.getLogger("hackers_healers")
 
 pending_auth: dict[str, dict[str, str]] = {}
 sync_lock = threading.Lock()
+sync_tracker: dict = {
+    "active": False,
+    "stage": "",
+    "step": 0,
+    "total_steps": 6,
+    "counts": {},
+    "total_fetched": 0,
+    "warnings": [],
+    "error": None,
+    "done": False,
+}
 
 SYNC_QUERIES = {
     "labs": ("Observation", {"category": "laboratory"}, "date"),
@@ -60,49 +179,11 @@ SYNC_QUERIES = {
     "coverage": ("Coverage", {}, "_lastUpdated"),
 }
 
-PAGE = """<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Hackers &amp; Healers</title><style>
-:root{font:16px/1.5 system-ui,sans-serif;color-scheme:light dark}body{max-width:1050px;margin:36px auto;padding:0 20px}
-h1{font-size:2rem}.muted{opacity:.72}.card{border:1px solid #8885;border-radius:12px;padding:20px;margin:18px 0}
-.metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px}.metric{border:1px solid #8885;border-radius:10px;padding:16px}
-.metric strong{display:block;font-size:1.5rem;margin-top:6px}button,.button{border:0;border-radius:8px;background:#635bff;color:white;padding:10px 16px;font:inherit;text-decoration:none;cursor:pointer}
-.split{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:18px}.empty{opacity:.7}
-.warning{border-left:4px solid #d99000;padding:10px 14px;background:#d9900018}.rows{overflow:auto}table{border-collapse:collapse;width:100%}td,th{text-align:left;padding:8px;border-bottom:1px solid #8885}form.inline{display:inline}
-</style></head><body><h1>Hackers &amp; Healers</h1><p class="muted">Patient-authorized FHIR sync · local CKM dashboard</p>
-<p class="warning"><strong>Private health data:</strong> use the Epic sandbox or your own authorized account. You complete the MyChart sign-in and consent. The app never asks for or stores your MyChart password. Local records and refresh tokens are encrypted using your local key.</p>
-{% if error %}<p class="warning">{{ error }}</p>{% endif %}
-{% if not connection %}<section class="card"><h2>Connect a health system</h2>
-{% if not client_ready %}<p>Add <code>CLIENT_ID</code>, <code>CLIENT_SECRET</code>, and <code>DATA_ENCRYPTION_KEY</code> to your local <code>.env</code> first.</p>
-{% else %}<p>Select a portal. You will sign in directly with that health system and approve access there.</p>
-<form method="post" action="{{ url_for('connect') }}"><label for="endpoint">Health system</label><br><select id="endpoint" name="endpoint" required>{% for item in endpoints %}<option value="{{ item.url }}">{{ item.name }}</option>{% endfor %}</select> <button>Continue to MyChart</button></form>{% endif %}
-<form method="post" action="{{ url_for('refresh_endpoint_directory') }}"><button class="button">Refresh health system list</button></form>
-<p class="muted">The list is cached locally and refreshed weekly from Epic’s published endpoint directory.</p></section>
-{% else %}<section class="card"><h2>Sync status</h2><p>Connected to <code>{{ connection.display_name or connection.fhir_base_url }}</code></p>
-<p>Last sync: {{ last_sync or 'Not synced yet' }} · {{ 'Daily sync enabled' if connection.refresh_token else 'Reconnect required after this session expires' }}</p>
-<form class="inline" method="post" action="{{ url_for('sync_now') }}"><button>Sync now</button></form>
-<form class="inline" method="post" action="{{ url_for('disconnect') }}"><button>Disconnect</button></form></section>
-{% if sync_warnings %}<p class="warning">Some optional record categories were unavailable from this Epic app: {{ sync_warnings|join(', ') }}. Other records were still saved.</p>{% endif %}
-<section class="card"><h2>Patient</h2><p><strong>{{ patient.name }}</strong></p><p class="muted">Birth date: {{ patient.birth_date }} · Gender: {{ patient.gender }}</p></section>
-<section class="card"><h2>CKM overview</h2><div class="metrics">
-<div class="metric">Latest eGFR<strong>{{ metric_text(metrics.latest_egfr) }}</strong></div>
-<div class="metric">Average blood pressure<strong>{{ pressure_text(metrics) }}</strong><span class="muted">{{ metrics.blood_pressure_count }} readings</span></div>
-<div class="metric">A1c results<strong>{{ metrics.a1c_trend|length }}</strong><span class="muted">available in trend below</span></div>
-</div><p class="muted">These summaries describe the imported records; they are not clinical advice.</p>
-{% if metrics.a1c_trend %}<h3>A1c trend</h3><div class="rows"><table><thead><tr><th>Date</th><th>Result</th><th>Test</th></tr></thead><tbody>{% for row in metrics.a1c_trend|reverse %}<tr><td>{{ row.date or 'Date unavailable' }}</td><td>{{ row.value }} {{ row.unit }}</td><td>{{ row.display }}</td></tr>{% endfor %}</tbody></table></div>{% endif %}</section>
-<div class="split"><section class="card"><h2>Recent labs</h2>{% if labs %}<div class="rows"><table><thead><tr><th>Date</th><th>Test</th><th>Result</th></tr></thead><tbody>{% for row in labs %}<tr><td>{{ row.date }}</td><td>{{ row.display }}</td><td>{{ row.value }}</td></tr>{% endfor %}</tbody></table></div>{% else %}<p class="empty">No lab results synced.</p>{% endif %}</section>
-<section class="card"><h2>Recent vitals</h2>{% if vitals %}<div class="rows"><table><thead><tr><th>Date</th><th>Measurement</th><th>Value</th></tr></thead><tbody>{% for row in vitals %}<tr><td>{{ row.date }}</td><td>{{ row.display }}</td><td>{{ row.value }}</td></tr>{% endfor %}</tbody></table></div>{% else %}<p class="empty">No vital signs synced.</p>{% endif %}</section></div>
-<div class="split"><section class="card"><h2>Problems</h2>{% if conditions %}<div class="rows"><table><thead><tr><th>Condition</th><th>Status</th><th>Onset</th></tr></thead><tbody>{% for row in conditions %}<tr><td>{{ row.display }}</td><td>{{ row.status }}</td><td>{{ row.onset }}</td></tr>{% endfor %}</tbody></table></div>{% else %}<p class="empty">No problems synced.</p>{% endif %}</section>
-<section class="card"><h2>Medications</h2>{% if medications %}<div class="rows"><table><thead><tr><th>Medication</th><th>Status</th><th>Instructions</th></tr></thead><tbody>{% for row in medications %}<tr><td>{{ row.display }}</td><td>{{ row.status }}</td><td>{{ row.details }}</td></tr>{% endfor %}</tbody></table></div>{% else %}<p class="empty">No medication orders available. The Epic app may need MedicationRequest access.</p>{% endif %}</section></div>
-<div class="split"><section class="card"><h2>Upcoming appointments</h2>{% if appointments %}<div class="rows"><table><thead><tr><th>Date</th><th>Visit</th><th>Status</th></tr></thead><tbody>{% for row in appointments %}<tr><td>{{ row.date }}</td><td>{{ row.display }}</td><td>{{ row.status }}</td></tr>{% endfor %}</tbody></table></div>{% else %}<p class="empty">No appointments synced.</p>{% endif %}</section>
-<section class="card"><h2>Insurance coverage</h2>{% if coverage %}<div class="rows"><table><thead><tr><th>Plan</th><th>Status</th><th>Period</th></tr></thead><tbody>{% for row in coverage %}<tr><td>{{ row.display }}</td><td>{{ row.status }}</td><td>{{ row.period }}</td></tr>{% endfor %}</tbody></table></div>{% else %}<p class="empty">No coverage records synced.</p>{% endif %}</section></div>
-<section class="card"><h2>Synced records</h2>{% if counts %}<div class="rows"><table><thead><tr><th>FHIR type</th><th>Records</th></tr></thead><tbody>{% for kind,count in counts.items() %}<tr><td>{{ kind }}</td><td>{{ count }}</td></tr>{% endfor %}</tbody></table></div>{% else %}<p>No records synced yet.</p>{% endif %}</section>{% endif %}
-<p class="muted">This demo runs on this computer at <code>127.0.0.1</code>. Stop it to stop scheduled syncs.</p><footer class="muted"><a href="{{ url_for('terms') }}">Terms and Conditions (Draft)</a></footer></body></html>"""
 
-
-def _sid() -> str:
-    if not session.get("sid"):
-        session["sid"] = secrets.token_urlsafe(24)
-    return str(session["sid"])
+def _sid(request: Request) -> str:
+    if not request.session.get("sid"):
+        request.session["sid"] = secrets.token_urlsafe(24)
+    return str(request.session["sid"])
 
 
 def _metadata(base_url: str) -> dict:
@@ -122,17 +203,12 @@ def _b64url(value: bytes) -> str:
 
 
 def _client_auth_header() -> dict[str, str]:
-    # Epic's confidential-client flow expects URL-encoded client credentials
-    # in HTTP Basic auth, rather than client_id/client_secret in the form body.
     encoded = f"{quote(CLIENT_ID, safe='')}:{quote(CLIENT_SECRET, safe='')}".encode("ascii")
     return {"Authorization": f"Basic {base64.b64encode(encoded).decode('ascii')}"}
 
 
 def _token_request(mode: str, data: dict[str, str]) -> tuple[dict[str, str], dict[str, str]]:
-    """Build Epic's token request without mixing public and confidential auth."""
     if mode == "public":
-        # Epic's non-confidential flow authenticates with the public client ID in
-        # the form body. It must not send a Basic header or a client secret.
         return {**data, "client_id": CLIENT_ID}, {"Accept": "application/json"}
     if mode == "confidential":
         return data, {"Accept": "application/json", **_client_auth_header()}
@@ -140,7 +216,6 @@ def _token_request(mode: str, data: dict[str, str]) -> tuple[dict[str, str], dic
 
 
 def _authorization_scopes(mode: str) -> str:
-    """Do not ask a public client for Epic's refresh-token scope."""
     scopes = SCOPES.split()
     if mode == "public":
         scopes = [scope for scope in scopes if scope != "offline_access"]
@@ -153,7 +228,6 @@ def _configured_client_ready() -> bool:
 
 
 def _safe_oauth_error_code(response) -> str:
-    """Return only a known OAuth error code; never expose a response body."""
     try:
         payload = response.json()
     except (TypeError, ValueError):
@@ -226,7 +300,6 @@ def _fhir_get(url: str, token: str, base_url: str) -> dict:
 
 
 def fetch_resource(connection: dict, resource_type: str, resource_id: str) -> dict:
-    """Read one resource while keeping the request on the selected FHIR host."""
     base = connection["fhir_base_url"].rstrip("/")
     base_parts = urlparse(base)
     safe_id = quote(str(resource_id), safe="")
@@ -261,9 +334,23 @@ def fetch_bundle(connection: dict, resource_type: str, params: dict) -> list[dic
 
 
 def sync_connection(connection: dict, last_sync_at: str | None) -> dict:
+    global sync_tracker
+    sync_tracker.update({
+        "active": True,
+        "stage": "Refreshing credentials & connecting...",
+        "step": 1,
+        "total_steps": 6,
+        "counts": {},
+        "total_fetched": 0,
+        "warnings": [],
+        "error": None,
+        "done": False,
+    })
     connection = _refresh_connection(connection)
     patient_id = connection.get("patient_id")
     if not patient_id:
+        sync_tracker["active"] = False
+        sync_tracker["error"] = "Authorization response did not include patient context."
         raise ValueError("The authorization response did not include patient context.")
     since = last_sync_at or ""
     fetched: list[dict] = []
@@ -271,26 +358,44 @@ def sync_connection(connection: dict, last_sync_at: str | None) -> dict:
     warnings: list[str] = []
 
     try:
+        sync_tracker["stage"] = "Fetching patient demographics..."
         patient = fetch_resource(connection, "Patient", patient_id)
         fetched.append(patient)
         counts["patient"] = 1
+        sync_tracker["counts"]["Patient"] = 1
+        sync_tracker["total_fetched"] = 1
     except (requests.RequestException, ValueError) as exc:
+        sync_tracker["active"] = False
+        sync_tracker["error"] = "The patient record could not be read from the selected FHIR server."
         raise ValueError("The patient record could not be read from the selected FHIR server.") from exc
 
+    step_labels = {
+        "labs": ("Fetching laboratory results (A1c, eGFR)...", 2),
+        "vitals": ("Fetching vital signs (blood pressure, weight)...", 3),
+        "conditions": ("Fetching conditions & problem list...", 4),
+        "medications": ("Fetching medications & active prescriptions...", 5),
+        "appointments": ("Fetching appointments...", 6),
+        "coverage": ("Fetching insurance coverage...", 6),
+    }
+
     for label, (resource_type, params, date_param) in SYNC_QUERIES.items():
+        stage_desc, step_num = step_labels.get(label, (f"Fetching {label}...", 5))
+        sync_tracker["stage"] = stage_desc
+        sync_tracker["step"] = step_num
         query = {**params, "patient": patient_id, "_count": "100"}
         if since and date_param:
             query[date_param] = f"ge{since}"
         try:
             resources = fetch_bundle(connection, resource_type, query)
         except (requests.RequestException, ValueError):
-            # A patient-facing Epic app may not have every optional API enabled.
-            # Keep successful resource types and tell the dashboard which ones were skipped.
             warnings.append(label)
             counts[label] = 0
+            sync_tracker["warnings"] = list(warnings)
             continue
         fetched.extend(resources)
         counts[label] = len(resources)
+        sync_tracker["counts"][label] = len(resources)
+        sync_tracker["total_fetched"] = len(fetched)
 
     medication_references = {
         item.get("medicationReference", {}).get("reference", "").split("/")[-1]
@@ -299,19 +404,27 @@ def sync_connection(connection: dict, last_sync_at: str | None) -> dict:
         and item.get("medicationReference", {}).get("reference", "").startswith("Medication/")
     }
     medication_details = 0
+    if medication_references:
+        sync_tracker["stage"] = "Fetching medication details..."
     for medication_id in medication_references:
         try:
             fetched.append(fetch_resource(connection, "Medication", medication_id))
             medication_details += 1
+            sync_tracker["total_fetched"] = len(fetched)
         except (requests.RequestException, ValueError):
             warnings.append("medication details")
     if medication_details:
         counts["medication_details"] = medication_details
 
+    sync_tracker["stage"] = f"Encrypting and saving {len(fetched)} records locally..."
     stored = storage.save_resources(fetched, namespace=connection["fhir_base_url"])
     synced_at = datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
     connection["last_sync_warnings"] = warnings
     storage.save_connection(connection, last_sync_at=synced_at)
+    sync_tracker["active"] = False
+    sync_tracker["done"] = True
+    sync_tracker["step"] = 6
+    sync_tracker["stage"] = f"Sync complete! {len(fetched)} records successfully loaded."
     return {"counts": counts, "stored": stored, "synced_at": synced_at, "warnings": warnings}
 
 
@@ -324,31 +437,51 @@ def daily_sync() -> None:
             connection, last_sync_at = item
             sync_connection(connection, last_sync_at)
     except Exception:
-        # Avoid logging patient data, tokens, or server response bodies.
-        app.logger.warning("Scheduled FHIR sync failed; check the local dashboard and reconnect if needed.")
+        logger.warning("Scheduled FHIR sync failed; check the local dashboard and reconnect if needed.")
     finally:
         sync_lock.release()
 
 
-@app.get("/")
-def index():
+@app.get("/", response_class=HTMLResponse)
+def index(request: Request):
     connection_item = storage.load_connection()
     connection = connection_item[0] if connection_item else None
     last_sync = connection_item[1] if connection_item else None
-    return _render_dashboard(connection, last_sync)
+    patient = {}
+    if connection:
+        records = storage.load_resources(namespace=connection.get("fhir_base_url"))
+        if records:
+            patient = patient_view(records)
+    return templates.TemplateResponse(
+        request=request,
+        name="landing.html",
+        context={
+            "connection": connection,
+            "patient": patient,
+            "last_sync": last_sync,
+        },
+    )
+
+
+@app.get("/app", response_class=HTMLResponse)
+def patient_app(request: Request):
+    connection_item = storage.load_connection()
+    connection = connection_item[0] if connection_item else None
+    last_sync = connection_item[1] if connection_item else None
+    return _render_dashboard(request, connection, last_sync)
 
 
 @app.post("/sample/load")
 def load_sample():
     storage.save_resources(sample_resources(), namespace=SAMPLE_NAMESPACE)
-    return redirect(url_for("sample_dashboard"))
+    return RedirectResponse(url="/sample", status_code=303)
 
 
 @app.get("/sample")
-def sample_dashboard():
+def sample_dashboard(request: Request):
     if not storage.record_counts(namespace=SAMPLE_NAMESPACE):
-        return redirect(url_for("index"))
-    return _render_dashboard({"fhir_base_url": SAMPLE_NAMESPACE,
+        storage.save_resources(sample_resources(), namespace=SAMPLE_NAMESPACE)
+    return _render_dashboard(request, {"fhir_base_url": SAMPLE_NAMESPACE,
                               "display_name": "Maya — synthetic sample data"},
                              None, sample_mode=True)
 
@@ -361,59 +494,66 @@ def sample_json():
             "entry": [{"resource": record} for record in records]}
 
 
-def _render_dashboard(connection, last_sync, sample_mode=False):
-    error = request.args.get("error")
+def _render_dashboard(request: Request, connection, last_sync, sample_mode=False):
+    error = request.query_params.get("error")
     namespace = connection.get("fhir_base_url") if connection else None
     records = storage.load_resources(namespace=namespace) if connection else []
     labs, vitals = observation_views(records)
     metrics = summarize(records)
-    return render_template(
-        "index.html",
-        error=error,
-        sample_mode=sample_mode,
-        connection=connection,
-        base_url=FHIR_BASE_URL,
-        endpoints=_known_endpoints(),
-        client_ready=_configured_client_ready(),
-        last_sync=last_sync,
-        counts=storage.record_counts(namespace=namespace) if connection else {},
-        metrics=metrics,
-        patient=patient_view(records) if connection else {},
-        labs=labs,
-        vitals=vitals,
-        conditions=condition_views(records),
-        medications=medication_views(records),
-        appointments=appointment_views(records),
-        coverage=coverage_views(records),
-        sync_warnings=connection.get("last_sync_warnings", []) if connection else [],
-        metric_text=lambda item: f"{item['value']:g} {item['unit']}" if item else "No result",
-        pressure_text=lambda item: f"{item['systolic_average'] or '—'}/{item['diastolic_average'] or '—'} mmHg",
+    sync_active = sync_tracker["active"] or (sync_lock.locked() and not sample_mode)
+    return templates.TemplateResponse(
+        request=request,
+        name="index.html",
+        context={
+            "error": error,
+            "sample_mode": sample_mode,
+            "connection": connection,
+            "base_url": FHIR_BASE_URL,
+            "endpoints": _known_endpoints(),
+            "client_ready": _configured_client_ready(),
+            "last_sync": last_sync,
+            "counts": storage.record_counts(namespace=namespace) if connection else {},
+            "metrics": metrics,
+            "patient": patient_view(records) if connection else {},
+            "labs": labs,
+            "vitals": vitals,
+            "conditions": condition_views(records),
+            "medications": medication_views(records),
+            "appointments": appointment_views(records),
+            "coverage": coverage_views(records),
+            "sync_warnings": connection.get("last_sync_warnings", []) if connection else [],
+            "sync_active": sync_active,
+            "sync_tracker": sync_tracker,
+            "metric_text": lambda item: f"{item['value']:g} {item['unit']}" if item else "No result",
+            "pressure_text": lambda item: f"{item['systolic_average'] or '—'}/{item['diastolic_average'] or '—'} mmHg",
+        },
     )
 
 
 @app.get("/terms")
-def terms():
+def terms(request: Request):
     """Show draft terms for the local prototype; not yet legally operative."""
-    return render_template("terms.html")
+    return templates.TemplateResponse(request=request, name="terms.html", context={})
 
 
 @app.post("/connect")
-def connect():
-    if request.form.get("consent") != "yes":
-        return redirect(url_for("index", error="Please acknowledge the privacy and medical-information notice before connecting."))
+async def connect(request: Request):
+    form = await request.form()
+    if form.get("consent") != "yes":
+        return RedirectResponse(url="/app?error=Please+acknowledge+the+privacy+and+medical-information+notice+before+connecting.", status_code=302)
     if not _configured_client_ready():
-        return redirect(url_for("index", error="OAuth configuration is incomplete for the selected client mode. Check CLIENT_ID, DATA_ENCRYPTION_KEY, and CLIENT_SECRET when using confidential mode."))
-    selected_url = request.form.get("endpoint", "").rstrip("/")
+        return RedirectResponse(url="/app?error=OAuth+configuration+is+incomplete+for+the+selected+client+mode.+Check+CLIENT_ID,+DATA_ENCRYPTION_KEY,+and+CLIENT_SECRET+when+using+confidential+mode.", status_code=302)
+    selected_url = str(form.get("endpoint", "")).rstrip("/")
     selected = next((item for item in _known_endpoints() if item["url"] == selected_url), None)
     if not selected:
-        abort(400, "Choose a health system from the published list.")
+        return PlainTextResponse("Choose a health system from the published list.", status_code=400)
     try:
         metadata = _metadata(selected_url)
     except (requests.RequestException, ValueError):
-        return redirect(url_for("index", error="Could not read the selected FHIR server's SMART configuration."))
+        return RedirectResponse(url="/app?error=Could+not+read+the+selected+FHIR+server's+SMART+configuration.", status_code=302)
     verifier = _b64url(secrets.token_bytes(48))
     state = secrets.token_urlsafe(32)
-    pending_auth[_sid()] = {"state": state, "verifier": verifier, "base_url": selected_url, "display_name": selected["name"], "auth_endpoint": metadata["authorization_endpoint"], "token_endpoint": metadata["token_endpoint"], "oauth_client_mode": OAUTH_CLIENT_MODE}
+    pending_auth[_sid(request)] = {"state": state, "verifier": verifier, "base_url": selected_url, "display_name": selected["name"], "auth_endpoint": metadata["authorization_endpoint"], "token_endpoint": metadata["token_endpoint"], "oauth_client_mode": OAUTH_CLIENT_MODE}
     params = {
         "response_type": "code", "client_id": CLIENT_ID, "redirect_uri": REDIRECT_URI,
         "aud": selected_url, "state": state,
@@ -423,20 +563,21 @@ def connect():
     if scopes:
         params["scope"] = scopes
     query = urlencode(params)
-    return redirect(f"{metadata['authorization_endpoint']}?{query}")
+    return RedirectResponse(url=f"{metadata['authorization_endpoint']}?{query}", status_code=302)
 
 
 @app.get("/callback")
-def callback():
-    sid = _sid()
+def callback(request: Request):
+    sid = _sid(request)
     pending = pending_auth.get(sid)
     if not pending:
-        return redirect(url_for("index", error="This sign-in attempt expired or the app restarted. Start a fresh connection."))
-    if not secrets.compare_digest(request.args.get("state", ""), pending["state"]):
+        return RedirectResponse(url="/app?error=This+sign-in+attempt+expired+or+the+app+restarted.+Start+a+fresh+connection.", status_code=302)
+    state = request.query_params.get("state", "")
+    if not secrets.compare_digest(state, pending["state"]):
         pending_auth.pop(sid, None)
-        return redirect(url_for("index", error="OAuth state did not match. For your security, start a fresh connection."))
+        return RedirectResponse(url="/app?error=OAuth+state+did+not+match.+For+your+security,+start+a+fresh+connection.", status_code=302)
     pending_auth.pop(sid, None)
-    oauth_error = request.args.get("error")
+    oauth_error = request.query_params.get("error")
     if oauth_error:
         messages = {
             "access_denied": "The patient declined access. No connection was saved.",
@@ -444,10 +585,11 @@ def callback():
             "invalid_scope": "Epic rejected a requested scope. Check the APIs selected for this app and start again after Sandbox sync.",
             "unauthorized_client": "Epic has not enabled this app for the Sandbox yet. Check its status and try again after settings sync.",
         }
-        return redirect(url_for("index", error=messages.get(oauth_error, "Epic returned an OAuth authorization error. Verify the app settings and start again.")))
-    code = request.args.get("code", "")
+        msg = messages.get(oauth_error, "Epic returned an OAuth authorization error. Verify the app settings and start again.")
+        return RedirectResponse(url=f"/app?error={quote(msg)}", status_code=302)
+    code = request.query_params.get("code", "")
     if not code:
-        abort(400, "The FHIR server did not return an authorization code.")
+        return PlainTextResponse("The FHIR server did not return an authorization code.", status_code=400)
     mode = pending.get("oauth_client_mode", OAUTH_CLIENT_MODE)
     try:
         data, headers = _token_request(mode, {
@@ -466,8 +608,6 @@ def callback():
             "display_name": pending["display_name"],
             "fhir_base_url": pending["base_url"], "token_endpoint": pending["token_endpoint"],
             "patient_id": tokens["patient"], "access_token": tokens["access_token"],
-            # Public clients intentionally do not persist refresh tokens, even
-            # if an endpoint returns one contrary to its registration.
             "oauth_client_mode": mode,
             "refresh_token": tokens.get("refresh_token", "") if mode == "confidential" else "",
             "expires_at": int(datetime.now(timezone.utc).timestamp()) + int(tokens.get("expires_in", 3600)),
@@ -477,10 +617,10 @@ def callback():
     except requests.HTTPError as exc:
         status = exc.response.status_code if exc.response is not None else "unknown"
         error_code = _safe_oauth_error_code(exc.response) if exc.response is not None else ""
-        return redirect(url_for("index", error=_token_exchange_error(status, error_code, mode)))
+        return RedirectResponse(url=f"/app?error={quote(_token_exchange_error(status, error_code, mode))}", status_code=302)
     except (requests.RequestException, ValueError, RuntimeError):
-        return redirect(url_for("index", error="Connection could not be saved. Check app settings and ensure local encryption is configured."))
-    return redirect(url_for("index"))
+        return RedirectResponse(url="/app?error=Connection+could+not+be+saved.+Check+app+settings+and+ensure+local+encryption+is+configured.", status_code=302)
+    return RedirectResponse(url="/app", status_code=302)
 
 
 def _first_sync(connection: dict) -> None:
@@ -488,34 +628,83 @@ def _first_sync(connection: dict) -> None:
         return
     try:
         sync_connection(connection, None)
-    except Exception:
-        app.logger.warning("Initial FHIR sync failed; check the local dashboard and reconnect if needed.")
+    except Exception as exc:
+        sync_tracker["active"] = False
+        sync_tracker["error"] = str(exc)
+        logger.warning("Initial FHIR sync failed; check the local dashboard and reconnect if needed.")
     finally:
         sync_lock.release()
 
 
+@app.get("/sync/status")
+def sync_status_endpoint():
+    return {
+        "active": sync_tracker["active"] or sync_lock.locked(),
+        "stage": sync_tracker["stage"],
+        "step": sync_tracker["step"],
+        "total_steps": sync_tracker["total_steps"],
+        "counts": sync_tracker["counts"],
+        "total_fetched": sync_tracker["total_fetched"],
+        "warnings": sync_tracker["warnings"],
+        "error": sync_tracker["error"],
+        "done": sync_tracker["done"],
+    }
+
+
+@app.get("/favicon.ico")
+def favicon():
+    return Response(status_code=204)
+
+
 @app.post("/sync")
-def sync_now():
+def sync_now(request: Request):
+    accept_header = request.headers.get("accept", "")
+    is_ajax = "application/json" in accept_header
     try:
         item = storage.load_connection()
         if not item:
-            return redirect(url_for("index", error="Connect your health system first."))
+            if is_ajax:
+                return JSONResponse({"error": "Connect your health system first."}, status_code=400)
+            return RedirectResponse(url="/?error=Connect+your+health+system+first.", status_code=303)
+        if sync_lock.locked() or sync_tracker["active"]:
+            if is_ajax:
+                return JSONResponse({"status": "in_progress", "message": "A sync is already running."})
+            return RedirectResponse(url="/?error=A+sync+is+already+running.", status_code=303)
+        if is_ajax:
+            def run_async_sync():
+                if not sync_lock.acquire(blocking=False):
+                    return
+                try:
+                    sync_connection(*item)
+                except Exception as exc:
+                    sync_tracker["active"] = False
+                    sync_tracker["error"] = str(exc)
+                finally:
+                    sync_lock.release()
+
+            threading.Thread(target=run_async_sync, daemon=True).start()
+            return JSONResponse({"status": "started", "message": "Sync started in background."})
+
         if not sync_lock.acquire(blocking=False):
-            return redirect(url_for("index", error="A sync is already running."))
+            return RedirectResponse(url="/app?error=A+sync+is+already+running.", status_code=303)
         try:
             result = sync_connection(*item)
         finally:
             sync_lock.release()
         warning_text = f" Optional APIs unavailable: {', '.join(result['warnings'])}." if result["warnings"] else ""
-        return redirect(url_for("index", error=f"Sync complete: {result['counts'].get('labs', 0)} labs, {result['counts'].get('vitals', 0)} vitals, {result['counts'].get('conditions', 0)} conditions, and {result['counts'].get('appointments', 0)} appointments fetched.{warning_text}"))
+        msg = f"Sync complete: {result['counts'].get('labs', 0)} labs, {result['counts'].get('vitals', 0)} vitals, {result['counts'].get('conditions', 0)} conditions, and {result['counts'].get('appointments', 0)} appointments fetched.{warning_text}"
+        return RedirectResponse(url=f"/app?error={quote(msg)}", status_code=303)
     except Exception:
-        return redirect(url_for("index", error="Sync failed. The local dashboard did not record server response details."))
+        if is_ajax:
+            return JSONResponse({"error": "Sync failed."}, status_code=500)
+        return RedirectResponse(url="/app?error=Sync+failed.+The+local+dashboard+did+not+record+server+response+details.", status_code=303)
 
 
-@app.post("/disconnect")
-def disconnect():
+@app.api_route("/disconnect", methods=["GET", "POST"])
+def disconnect(request: Request):
     storage.clear_connection()
-    return redirect(url_for("index"))
+    request.session.clear()
+    return RedirectResponse(url="/app", status_code=303)
 
 
 def start_scheduler() -> None:
@@ -523,6 +712,7 @@ def start_scheduler() -> None:
     scheduler.add_job(daily_sync, "cron", hour=SYNC_HOUR, id="daily-fhir-sync", max_instances=1, coalesce=True)
     scheduler.add_job(_refresh_directory_if_stale, "interval", days=7, id="epic-directory-refresh", max_instances=1, coalesce=True)
     scheduler.start()
+    app.state.fhir_scheduler = scheduler
     app.extensions["fhir_scheduler"] = scheduler
 
 
@@ -531,7 +721,7 @@ def _refresh_directory_if_stale() -> None:
         try:
             endpoint_directory.refresh()
         except Exception:
-            app.logger.warning("Epic endpoint list could not be refreshed; the saved list remains available.")
+            logger.warning("Epic endpoint list could not be refreshed; the saved list remains available.")
 
 
 @app.post("/refresh-endpoint-directory")
@@ -541,20 +731,31 @@ def refresh_endpoint_directory():
         message = f"Health system list refreshed ({count} FHIR endpoints)."
     except Exception:
         message = "The directory could not be refreshed. Try again later."
-    return redirect(url_for("index", error=message))
+    return RedirectResponse(url=f"/app?error={quote(message)}", status_code=303)
 
 
 if __name__ == "__main__":
-    # Validate and prepare the callback transport before starting background work.
-    run_options = server_options(REDIRECT_URI)
+    use_ssl = os.getenv("USE_SSL", "false").lower() in {"1", "true", "yes"}
+    run_options = server_options(REDIRECT_URI, use_ssl=use_ssl)
     try:
         start_scheduler()
     except RuntimeError:
-        app.logger.warning("Daily scheduler could not start.")
+        logger.warning("Daily scheduler could not start.")
     if endpoint_directory.cache_is_stale():
         threading.Thread(target=_refresh_directory_if_stale, daemon=True).start()
-    callback_url = urlparse(REDIRECT_URI)
-    print(f"Open {callback_url.scheme}://{callback_url.netloc}/. Keep this process running for scheduled syncs.")
-    if callback_url.scheme == "https":
+    scheme = "https" if (use_ssl and run_options.get("ssl_certfile")) else "http"
+    port = run_options.get("port") or 3000
+    print(f"Open {scheme}://127.0.0.1:{port}/. Keep this process running for scheduled syncs.")
+    if scheme == "https":
         print("Local HTTPS uses a self-signed development certificate in data/local-tls.")
-    app.run(**run_options, debug=False, use_reloader=False)
+    else:
+        print("Running in local HTTP mode without SSL certificates.")
+    uvicorn.run(
+        "app:app",
+        host=run_options["host"],
+        port=port,
+        ssl_keyfile=run_options.get("ssl_keyfile") if scheme == "https" else None,
+        ssl_certfile=run_options.get("ssl_certfile") if scheme == "https" else None,
+        reload=True,
+        log_level="info",
+    )

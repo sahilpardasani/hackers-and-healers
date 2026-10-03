@@ -211,4 +211,137 @@
     setTimeout(() => URL.revokeObjectURL(link.href), 0);
     showToast('Visit summary downloaded');
   });
+
+  // Live Sync Tracker & polling
+  const syncTracker = document.querySelector('#sync-tracker');
+  if (syncTracker) {
+    const headline = document.querySelector('#sync-headline');
+    const stage = document.querySelector('#sync-stage');
+    const badge = document.querySelector('#sync-badge');
+    const progressBar = document.querySelector('#sync-progress-bar');
+    const liveCounts = document.querySelector('#sync-live-counts');
+    const stepCount = document.querySelector('#sync-step-count');
+    const spinner = document.querySelector('.sync-spinner');
+    let pollTimer = null;
+    let isPolling = false;
+
+    const updateUIWithStatus = (data) => {
+      if (!data) return;
+      if (data.active) {
+        syncTracker.hidden = false;
+        document.body.classList.add('is-syncing');
+        if (badge) {
+          badge.className = 'sync-status-badge badge-active';
+          badge.textContent = 'Fetching data';
+        }
+        if (headline) headline.textContent = 'Syncing health record…';
+        if (stage && data.stage) stage.textContent = data.stage;
+        if (progressBar && data.step && data.total_steps) {
+          const pct = Math.min(95, Math.max(12, Math.round((data.step / data.total_steps) * 100)));
+          progressBar.style.width = `${pct}%`;
+        }
+        if (liveCounts) {
+          const parts = [];
+          if (data.counts) {
+            for (const [key, count] of Object.entries(data.counts)) {
+              if (count > 0) parts.push(`${count} ${key.toLowerCase()}`);
+            }
+          }
+          liveCounts.textContent = parts.length > 0
+            ? `${data.total_fetched} records (${parts.join(', ')})`
+            : `${data.total_fetched} records retrieved`;
+        }
+        if (stepCount && data.step && data.total_steps) {
+          stepCount.textContent = `Step ${data.step} of ${data.total_steps}`;
+        }
+      } else if (data.done) {
+        if (badge) {
+          badge.className = 'sync-status-badge badge-done';
+          badge.textContent = '✓ Sync complete';
+        }
+        if (headline) headline.textContent = 'Data successfully synced!';
+        if (stage) stage.textContent = data.stage || 'All records fetched and encrypted locally.';
+        if (progressBar) progressBar.style.width = '100%';
+        if (spinner) spinner.style.borderTopColor = 'var(--mint-ink)';
+        if (liveCounts && data.total_fetched) {
+          liveCounts.textContent = `${data.total_fetched} records stored`;
+        }
+        document.body.classList.remove('is-syncing');
+        stopPolling();
+        showToast('✓ Sync complete! Updating dashboard…');
+        setTimeout(() => {
+          window.location.reload();
+        }, 1200);
+      } else if (data.error) {
+        if (badge) {
+          badge.className = 'sync-status-badge badge-error';
+          badge.textContent = 'Sync issue';
+        }
+        if (headline) headline.textContent = 'Sync encountered an issue';
+        if (stage) stage.textContent = data.error;
+        document.body.classList.remove('is-syncing');
+        stopPolling();
+      }
+    };
+
+    const pollStatus = async () => {
+      try {
+        const res = await fetch('/sync/status');
+        if (!res.ok) return;
+        const data = await res.json();
+        updateUIWithStatus(data);
+        if (!data.active && (data.done || data.error)) {
+          stopPolling();
+        }
+      } catch (err) {
+        console.warn('Sync status poll failed', err);
+      }
+    };
+
+    const startPolling = () => {
+      if (isPolling) return;
+      isPolling = true;
+      pollStatus();
+      pollTimer = setInterval(pollStatus, 700);
+    };
+
+    const stopPolling = () => {
+      isPolling = false;
+      if (pollTimer) {
+        clearInterval(pollTimer);
+        pollTimer = null;
+      }
+    };
+
+    if (!syncTracker.hidden) {
+      startPolling();
+    }
+
+    const syncForm = document.querySelector('form[action$="/sync"]');
+    if (syncForm) {
+      syncForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        syncTracker.hidden = false;
+        document.body.classList.add('is-syncing');
+        if (headline) headline.textContent = 'Starting sync…';
+        if (stage) stage.textContent = 'Connecting to health system…';
+        if (progressBar) progressBar.style.width = '10%';
+        if (badge) {
+          badge.className = 'sync-status-badge badge-active';
+          badge.textContent = 'Starting';
+        }
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        try {
+          await fetch('/sync', {
+            method: 'POST',
+            headers: { 'Accept': 'application/json' },
+          });
+          startPolling();
+        } catch {
+          syncForm.submit();
+        }
+      });
+    }
+  }
 })();
+
