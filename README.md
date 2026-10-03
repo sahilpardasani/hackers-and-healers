@@ -11,7 +11,7 @@ The patient completes the first MyChart sign-in and clicks Allow themselves. Thi
 3. Generate a local encryption key and add it to `.env`:
 
    ```sh
-   python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
+   python -c "import base64, secrets; print(base64.urlsafe_b64encode(secrets.token_bytes(32)).decode())"
    ```
 
    Set the printed value as `DATA_ENCRYPTION_KEY`. Keep a backup somewhere private: the encrypted local database cannot be read without this key.
