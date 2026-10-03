@@ -750,7 +750,15 @@
 
     <!-- DEXA Body Scan Tab Panel (Powered by Visualize SDK) -->
     <section id="panel-dexa" class="tab-panel" role="tabpanel" aria-labelledby="tab-dexa" tabindex="0"
-      data-tab-panel="dexa" hidden>
+      data-tab-panel="dexa"
+      data-patient-name="{{ patient_demographics.name }}"
+      data-patient-gender="{{ patient_demographics.gender }}"
+      data-patient-age="{{ patient_demographics.age }}"
+      data-patient-height="{{ patient_demographics.height_in }}"
+      data-patient-weight="{{ patient_demographics.weight_lb }}"
+      data-patient-user-ref="{{ patient_demographics.user_ref }}"
+      data-sample-mode="{{ 'true' if sample_mode else 'false' }}"
+      hidden>
       
       <!-- DEXA Hero Card -->
       <div class="dexa-hero-card">
@@ -835,35 +843,43 @@
         <div class="dexa-config-card">
           <div class="dexa-config-header">
             <h3>Subject Demographics</h3>
-            <button type="button" id="btn-dexa-preset-maya" class="button button-secondary dexa-preset-btn">
-              Sync Maya Patel
+            <button type="button" id="btn-dexa-preset-user" class="button button-secondary dexa-preset-btn">
+              {% if sample_mode %}
+                Sync Maya Patel
+              {% else %}
+                Sync {{ patient.name or 'My Record' }}
+              {% endif %}
             </button>
           </div>
           <p class="dexa-config-desc">
-            Pass exact demographics to calibrate 3D TrueDepth anthropometrics, or use your synced FHIR record.
+            {% if sample_mode %}
+              Pass exact demographics to calibrate 3D TrueDepth anthropometrics, or use your sample demo record.
+            {% else %}
+              Calibrate 3D TrueDepth anthropometrics using verified demographics from your synced health record.
+            {% endif %}
           </p>
 
           <div class="dexa-form-grid">
             <div class="dexa-field">
               <label for="dexa-input-gender">Biological Sex</label>
               <select id="dexa-input-gender" class="dexa-select">
-                <option value="female" selected>Female</option>
-                <option value="male">Male</option>
+                <option value="female" {% if patient_demographics.gender == 'female' %}selected{% endif %}>Female</option>
+                <option value="male" {% if patient_demographics.gender == 'male' %}selected{% endif %}>Male</option>
               </select>
             </div>
             <div class="dexa-field">
               <label for="dexa-input-age">Age (years)</label>
-              <input type="number" id="dexa-input-age" value="34" min="18" max="110" class="dexa-input">
+              <input type="number" id="dexa-input-age" value="{{ patient_demographics.age }}" min="18" max="110" class="dexa-input">
             </div>
             <div class="dexa-field">
               <label for="dexa-input-height">Height (inches)</label>
-              <input type="number" id="dexa-input-height" value="65" step="0.5" class="dexa-input">
-              <span class="dexa-input-hint">65 in = 5'5" (165 cm)</span>
+              <input type="number" id="dexa-input-height" value="{{ patient_demographics.height_in }}" step="0.5" class="dexa-input">
+              <span class="dexa-input-hint" id="dexa-height-hint">{{ patient_demographics.height_in }} in ({{ (patient_demographics.height_in * 2.54)|round }} cm)</span>
             </div>
             <div class="dexa-field">
               <label for="dexa-input-weight">Weight (lbs)</label>
-              <input type="number" id="dexa-input-weight" value="152" step="0.5" class="dexa-input">
-              <span class="dexa-input-hint">152 lbs = 68.9 kg</span>
+              <input type="number" id="dexa-input-weight" value="{{ patient_demographics.weight_lb }}" step="0.5" class="dexa-input">
+              <span class="dexa-input-hint" id="dexa-weight-hint">{{ patient_demographics.weight_lb }} lbs ({{ (patient_demographics.weight_lb * 0.453592)|round(1) }} kg)</span>
             </div>
           </div>
 

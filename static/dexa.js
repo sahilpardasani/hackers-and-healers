@@ -9,9 +9,10 @@
   'use strict';
 
   // Elements
+  const panelDexa = document.querySelector('#panel-dexa');
   const startScanBtn = document.querySelector('#btn-start-dexa-scan');
   const cancelScanBtn = document.querySelector('#btn-cancel-dexa-scan');
-  const scanPresetMayaBtn = document.querySelector('#btn-dexa-preset-maya');
+  const syncUserBtn = document.querySelector('#btn-dexa-preset-user') || document.querySelector('#btn-dexa-preset-maya');
   const scanStatusEl = document.querySelector('#dexa-scan-status');
   const scanProgressWrap = document.querySelector('#dexa-progress-wrap');
   const scanProgressBar = document.querySelector('#dexa-progress-bar');
@@ -72,14 +73,27 @@
   let scanAnimationTimer = null;
   let activeScanData = null;
 
-  // Initialize Maya preset
-  if (scanPresetMayaBtn) {
-    scanPresetMayaBtn.addEventListener('click', () => {
-      if (inputGender) inputGender.value = 'female';
-      if (inputHeight) inputHeight.value = '65';
-      if (inputWeight) inputWeight.value = '152';
-      if (inputAge) inputAge.value = '34';
-      showToast('Loaded synced demographics: Maya Patel (34yo F, 65 in, 152 lbs)');
+  // Dynamic user demographics helper
+  const getActiveUserDemographics = () => {
+    const isSample = panelDexa?.dataset.sampleMode === 'true' || document.body.dataset.sampleMode === 'true';
+    const patientName = panelDexa?.dataset.patientName || (isSample ? 'Maya Patel' : 'You');
+    const gender = panelDexa?.dataset.patientGender || (inputGender ? inputGender.value : 'female');
+    const age = parseInt(panelDexa?.dataset.patientAge || (inputAge ? inputAge.value : '34'), 10) || 34;
+    const heightIn = parseFloat(panelDexa?.dataset.patientHeight || (inputHeight ? inputHeight.value : '65')) || 65;
+    const weightLb = parseFloat(panelDexa?.dataset.patientWeight || (inputWeight ? inputWeight.value : '152')) || 152;
+    const userRef = panelDexa?.dataset.patientUserRef || (isSample ? 'maya_patel' : 'patient_user');
+    return { name: patientName, gender, age, heightIn, weightLb, userRef, isSample };
+  };
+
+  // Initialize synced demographic presets
+  if (syncUserBtn) {
+    syncUserBtn.addEventListener('click', () => {
+      const demo = getActiveUserDemographics();
+      if (inputGender) inputGender.value = demo.gender;
+      if (inputHeight) inputHeight.value = demo.heightIn;
+      if (inputWeight) inputWeight.value = demo.weightLb;
+      if (inputAge) inputAge.value = demo.age;
+      showToast(`Loaded synced demographics: ${demo.name} (${demo.age}yo, ${demo.heightIn} in, ${demo.weightLb} lbs)`);
     });
   }
 
@@ -132,10 +146,11 @@
       if (scanStageText) scanStageText.textContent = SCAN_STAGES[0].text;
       if (scanProgressBar) scanProgressBar.style.width = '15%';
 
+      const demo = getActiveUserDemographics();
       const sessionRes = await fetch('/api/dexa/session', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ host_user_ref: 'maya_patel' }),
+        body: JSON.stringify({ host_user_ref: demo.userRef }),
       });
       const sessionData = await sessionRes.json();
       const sessionToken = sessionData.session_token || 'vst_live';

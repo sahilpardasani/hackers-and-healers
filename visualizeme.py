@@ -19,6 +19,81 @@ VISUALIZEME_SECRET_KEY = os.getenv("VISUALIZEME_SECRET_KEY", "").strip()
 VISUALIZEME_PUBLISHABLE_KEY = os.getenv("VISUALIZEME_PUBLISHABLE_KEY", "pk_live_nudge_dexa_demo").strip()
 
 
+def extract_patient_demographics(records: list[dict] | None = None, fallback_sample: bool = False) -> dict:
+    """Extract real patient demographics from synced FHIR resources for DEXA body scanning.
+    
+    If no synced patient exists or fallback_sample is True, returns synthetic baseline demo data.
+    """
+    records = records or []
+    pt_resource = next((x for x in records if x.get("resourceType") == "Patient"), {})
+    names = pt_resource.get("name", [])
+    name = "Patient"
+    if names:
+        preferred = next((item for item in names if item.get("use") in {"official", "usual"}), names[0])
+        name = preferred.get("text") or " ".join([*preferred.get("given", []), preferred.get("family", "")]).strip() or name
+    elif fallback_sample:
+        name = "Maya Patel"
+
+    birth_date = pt_resource.get("birthDate")
+    age = 34 if fallback_sample else 32
+    if birth_date:
+        try:
+            today = datetime.date.today()
+            born = datetime.date.fromisoformat(str(birth_date)[:10])
+            age = today.year - born.year - ((today.month, today.day) < (born.month, born.day))
+        except Exception:
+            pass
+
+    gender = pt_resource.get("gender") or "female"
+
+    # Extract latest height from Observation records
+    height_in = 65.0
+    for obs in records:
+        if obs.get("resourceType") == "Observation":
+            code_str = str(obs.get("code", {})).lower()
+            if "height" in code_str or "8302-2" in code_str:
+                vq = obs.get("valueQuantity", {})
+                val = vq.get("value")
+                unit = (vq.get("unit") or vq.get("code") or "").lower()
+                if val:
+                    val = float(val)
+                    if "cm" in unit or val > 100:
+                        height_in = round(val / 2.54, 1)
+                    else:
+                        height_in = round(val, 1)
+                    break
+
+    # Extract latest weight from Observation records
+    weight_lb = 152.0 if fallback_sample else 183.6
+    for obs in records:
+        if obs.get("resourceType") == "Observation":
+            code_str = str(obs.get("code", {})).lower()
+            if "weight" in code_str or "29463-7" in code_str or "3141-9" in code_str:
+                vq = obs.get("valueQuantity", {})
+                val = vq.get("value")
+                unit = (vq.get("unit") or vq.get("code") or "").lower()
+                if val:
+                    val = float(val)
+                    if "kg" in unit or (val > 35 and val < 140):
+                        weight_lb = round(val * 2.20462, 1)
+                    else:
+                        weight_lb = round(val, 1)
+                    break
+
+    patient_id = pt_resource.get("id")
+    user_ref = f"patient_{patient_id}" if patient_id else f"user_{name.lower().replace(' ', '_')}"
+
+    return {
+        "name": name,
+        "is_sample": fallback_sample or not bool(pt_resource),
+        "age": age,
+        "gender": gender.lower(),
+        "height_in": height_in,
+        "weight_lb": weight_lb,
+        "user_ref": user_ref,
+    }
+
+
 def mint_session_token(host_user_ref: str = "patient_user") -> dict:
     """Mint a short-lived Visualize session token on the server for the mobile SDK or web client.
     

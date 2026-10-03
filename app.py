@@ -510,6 +510,7 @@ def _render_dashboard(request: Request, connection, last_sync, sample_mode=False
     sync_active = sync_tracker["active"] or (sync_lock.locked() and not sample_mode)
     prescription_recs = photon.generate_recommendations(effective_records)
     prescription_orders = storage.list_prescription_orders()
+    patient_demographics = visualizeme.extract_patient_demographics(records if connection else [], fallback_sample=sample_mode)
     return templates.TemplateResponse(
         request=request,
         name="index.html",
@@ -524,6 +525,7 @@ def _render_dashboard(request: Request, connection, last_sync, sample_mode=False
             "counts": storage.record_counts(namespace=namespace) if connection else {},
             "metrics": metrics,
             "patient": patient_view(records) if connection else {},
+            "patient_demographics": patient_demographics,
             "labs": labs,
             "vitals": vitals,
             "conditions": condition_views(records),
@@ -814,7 +816,12 @@ async def dexa_session(request: Request):
         body = await request.json()
     except Exception:
         pass
-    user_ref = body.get("host_user_ref") or "patient_maya_patel"
+    user_ref = body.get("host_user_ref")
+    if not user_ref or user_ref in ("patient_maya_patel", "maya_patel"):
+        conn = storage.load_connection()
+        records = storage.load_resources(namespace=conn[0].get("fhir_base_url")) if conn else []
+        demographics = visualizeme.extract_patient_demographics(records)
+        user_ref = demographics.get("user_ref") or "patient_user"
     token_info = visualizeme.mint_session_token(user_ref)
     return JSONResponse(token_info)
 
@@ -827,12 +834,17 @@ async def dexa_scan(request: Request):
         body = await request.json()
     except Exception:
         pass
-    subject = body.get("subject") or {
-        "gender": "female",
-        "heightIn": 65.0,
-        "weightLb": 152.0,
-        "ageYears": 34,
-    }
+    subject = body.get("subject")
+    if not subject:
+        conn = storage.load_connection()
+        records = storage.load_resources(namespace=conn[0].get("fhir_base_url")) if conn else []
+        demographics = visualizeme.extract_patient_demographics(records)
+        subject = {
+            "gender": demographics["gender"],
+            "heightIn": demographics["height_in"],
+            "weightLb": demographics["weight_lb"],
+            "ageYears": demographics["age"],
+        }
     scan_result = visualizeme.execute_body_scan(subject)
     storage.save_dexa_scan(scan_result)
     return JSONResponse({
