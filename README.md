@@ -6,7 +6,7 @@ The patient completes the first MyChart sign-in and clicks Allow themselves. Thi
 
 ## Run the Epic sandbox demo
 
-1. Create an app in the [Epic FHIR developer portal](https://fhir.epic.com/). Configure its redirect URI as `http://127.0.0.1:3000/callback` and enable the patient-facing read scopes and refresh/offline access supported by the app registration.
+1. Create an app in the [Epic FHIR developer portal](https://fhir.epic.com/). Configure its redirect URI as `https://127.0.0.1:3000/callback` and enable the patient-facing read scopes and refresh/offline access supported by the app registration. Use its **non-production** Client ID for the Epic sandbox.
 2. Copy `.env.example` to `.env`, then fill in your own client ID and client secret. Keep `.env` private; it is ignored by Git.
 3. Generate a local encryption key and add it to `.env`:
 
@@ -23,7 +23,11 @@ The patient completes the first MyChart sign-in and clicks Allow themselves. Thi
    pip install -r requirements.txt
    python app.py
    ```
-5. Open <http://127.0.0.1:3000>, choose the Epic sandbox, and complete the MyChart test-patient authorization in the browser. After consent, the first sync starts automatically. Use **Sync now** to run another sync on demand.
+5. Open <https://127.0.0.1:3000/>, choose the Epic sandbox, and complete the MyChart test-patient authorization in the browser. After consent, the first sync starts automatically. Use **Sync now** to run another sync on demand.
+
+The server uses the scheme and port in `REDIRECT_URI`. HTTPS creates a persistent self-signed development certificate under ignored `data/local-tls/`, with its private key readable only by the current user. Your browser may ask you to accept this local certificate on the first visit. The app does not install a trusted root or disable TLS verification to Epic. HTTP remains supported if both your local configuration and Epic registration use HTTP.
+
+If Epic shows **The request is invalid**, check the saved Endpoint URI against `REDIRECT_URI` character for character. `http://` and `https://` are different redirect URIs. A sandbox probe for this project returned an authorization error for HTTP but accepted HTTPS, so the local demo now defaults to HTTPS. Start each attempt with **Continue to MyChart**; signing into the sandbox MyChart home page directly does not authorize this app. Epic app-setting updates may take up to an hour to propagate.
 
 The default FHIR base URL is Epic's R4 sandbox: `https://fhir.epic.com/interconnect-fhir-oauth/api/FHIR/R4`. A local endpoint directory is refreshed from Epic weekly; choose an organization from the list before consent. You can set `FHIR_BASE_URL` and `HEALTH_SYSTEM_NAME` in `.env` to use a specific endpoint directly.
 
