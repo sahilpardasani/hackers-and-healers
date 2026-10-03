@@ -1,13 +1,17 @@
 import base64
 import hashlib
 from pathlib import Path
+import socket
 import ssl
 import tempfile
+import threading
 import unittest
 from unittest.mock import Mock, patch
 from urllib.parse import parse_qs, urlparse
 
 from cryptography import x509
+from flask import Flask
+from werkzeug.serving import make_server
 
 import app as service
 from local_server import server_options
@@ -27,6 +31,24 @@ class LocalTransportTests(unittest.TestCase):
             self.assertEqual((directory / "localhost.key").stat().st_mode & 0o777, 0o600)
             server_options("https://127.0.0.1:3000/callback", directory)
             self.assertEqual(original, (directory / "localhost.crt").read_bytes())
+
+    def test_idle_tls_client_does_not_block_other_connections(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            options = server_options("https://127.0.0.1:0/callback", Path(temporary))
+            server = make_server("127.0.0.1", 0, Flask(__name__), threaded=True,
+                                 ssl_context=options["ssl_context"])
+            threading.Thread(target=server.serve_forever, daemon=True).start()
+            self.addCleanup(server.shutdown)
+            port = server.socket.getsockname()[1]
+            # Like a browser preconnect: open TCP, never start the TLS handshake.
+            idle = socket.create_connection(("127.0.0.1", port))
+            self.addCleanup(idle.close)
+            client = ssl.create_default_context()
+            client.check_hostname, client.verify_mode = False, ssl.CERT_NONE
+            with socket.create_connection(("127.0.0.1", port), timeout=5) as raw, \
+                    client.wrap_socket(raw) as tls:
+                tls.sendall(b"GET / HTTP/1.1\r\nHost: 127.0.0.1\r\nConnection: close\r\n\r\n")
+                self.assertTrue(tls.recv(64).startswith(b"HTTP/1.1"))
 
     def test_http_remains_available_for_http_registrations(self):
         self.assertEqual(server_options("http://127.0.0.1:3000/callback"),
